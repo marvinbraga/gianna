@@ -9,7 +9,7 @@ Before running the script, make sure you have the following:
 
 - Python installed on your system
 - Required dependencies
-  installed (`pathlib`, `assistants.audio.loaders.mp3`, `assistants.audio.loaders.whisper_speech_to_text`)
+  installed (`pathlib`, `assistants.audio.stt.mp3`, `assistants.audio.stt.whisper`)
 - M4A audio files located in the `resources` directory relative to the script's parent directory
 
 ## Usage
@@ -50,8 +50,8 @@ Before running the script, make sure you have the following:
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 
-from assistants.audio.loaders.mp3 import MP3AudioLoader
-from assistants.audio.loaders.whisper_speech_to_text import WhisperSpeechToTextLoader
+from assistants.audio.stt.mp3 import MP3AudioLoader
+from assistants.audio.stt.whisper import WhisperSpeechToTextLoader
 
 load_dotenv(find_dotenv())
 
