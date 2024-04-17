@@ -4,17 +4,19 @@ from langchain_core.documents import Document
 from assistants.audio.stt.m4a import M4aAudioLoader
 from assistants.audio.stt.mp3 import MP3AudioLoader
 from assistants.audio.stt.whisper import WhisperSpeechToTextLoader
+from assistants.audio.stt.whisper_local import LocalWhisperSpeechToTextLoader
 
 load_dotenv(find_dotenv())
 
 
-def speech_to_text(audio_files_path, filetype) -> [Document]:
+def speech_to_text(audio_files_path, filetype, local: bool = False) -> [Document]:
     """
     Convert speech from an audio file to text using the specified file type loader and Whisper speech-to-text loader.
 
     Args:
-        audio_files_path (str): The path to the directory containing the audio files.
-        filetype (str): The file type of the audio files. Supported values are "mp3" and "m4a".
+        :param audio_files_path: The path to the directory containing the audio files.
+        :param filetype: The file type of the audio files. Supported values are "mp3" and "m4a".
+        :param local: If True execute the Whisper local speech-to-text loader instead.
 
     Returns:
         list[Document]: A list of Document objects containing the transcribed text from the audio files.
@@ -36,7 +38,8 @@ def speech_to_text(audio_files_path, filetype) -> [Document]:
     if not loader_class:
         raise ValueError("Invalid file type.")
 
-    loader = WhisperSpeechToTextLoader(
+    whisper_class = LocalWhisperSpeechToTextLoader if local else WhisperSpeechToTextLoader
+    loader = whisper_class(
         loader=loader_class(audio_files_path)
     )
 
