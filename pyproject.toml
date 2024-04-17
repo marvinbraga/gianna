@@ -12,6 +12,8 @@ crewai-tools = "^0.1.7"
 langchain-google-genai = "^1.0.2"
 langchain-nvidia-ai-endpoints = "^0.0.6"
 langchain-groq = "^0.1.2"
+pydub = "^0.25.1"
+pyaudio = "^0.2.14"
 
 
 [tool.poetry.group.dev.dependencies]
