@@ -1,7 +1,7 @@
-# Whisper Speech-to-Text Loader
+# Speech-to-Text Loader
 
-This Python script demonstrates how to use the `WhisperSpeechToTextLoader` and `MP3AudioLoader` classes to convert MP3
-audio files to text using OpenAI's Whisper API.
+This Python script demonstrates how to use the `WhisperSpeechToTextLoader` class along with the `MP3AudioLoader`
+and `M4aAudioLoader` classes to convert MP3 or M4A audio files to text using OpenAI's Whisper API.
 
 ## Prerequisites
 
@@ -9,84 +9,90 @@ Before running the script, make sure you have the following:
 
 - Python installed on your system
 - Required dependencies
-  installed (`pathlib`, `assistants.audio.stt.mp3`, `assistants.audio.stt.whisper`)
-- M4A audio files located in the `resources` directory relative to the script's parent directory
+  installed (`pathlib`, `dotenv`, `assistants.audio.stt.mp3`, `assistants.audio.stt.m4a`, `assistants.audio.stt.whisper`)
+- Audio files (MP3 or M4A) located in the specified directory
 
 ## Usage
 
-1. Place your M4A audio files in the `resources` directory. The directory structure should look like this:
+1. Place your audio files (MP3 or M4A) in the desired directory.
 
-    ```
-    gianna/
-        ├── your_script.py
-        └── resources/
-            ├── audio1.mp3
-            ├── audio2.mp3
-            └── ...
-    ```
+2. Open the script file and ensure that the `audio_files_path` variable is set correctly, pointing to the directory
+   containing your audio files.
 
-2. Open the script file and ensure that the `save_dir` variable is set correctly. By default, it assumes that
-   the `resources` directory is located in the parent directory of the script.
+3. Specify the `filetype` variable with the appropriate value based on your audio file format: "mp3" for MP3 files or "
+   m4a" for M4A files.
 
-    ```python
-    save_dir = Path().parent.absolute() / "resources"
-    ```
-
-3. Run the script using Python:
+4. Run the script using Python:
 
     ```bash
     python your_script.py
     ```
 
-4. The script will load the M4A audio files from the `resources` directory using the `MP3AudioLoader` class and pass
-   them to the `WhisperSpeechToTextLoader` for speech-to-text conversion.
+5. The script will load the audio files from the specified directory using the appropriate loader
+   class (`MP3AudioLoader` or `M4aAudioLoader`) based on the `filetype` value.
 
-5. The resulting text documents will be stored in the `docs` variable. The script will print the `source` metadata of
-   each document, which represents the path of the original audio file.
+6. The loaded audio files will be passed to the `WhisperSpeechToTextLoader` for speech-to-text conversion using OpenAI's
+   Whisper API.
+
+7. The resulting text documents will be stored in the `docs` variable, which is returned by the `speech_to_text`
+   function.
 
 ## Example Code
 
 ```python
-from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
+from langchain_core.documents import Document
 
+from assistants.audio.stt.m4a import M4aAudioLoader
 from assistants.audio.stt.mp3 import MP3AudioLoader
 from assistants.audio.stt.whisper import WhisperSpeechToTextLoader
 
 load_dotenv(find_dotenv())
 
-save_dir = Path().absolute() / "resources"
-print(save_dir, save_dir.exists(), save_dir.is_dir())
 
-loader = WhisperSpeechToTextLoader(loader=MP3AudioLoader(save_dir))
-docs = loader.load().docs
+def speech_to_text(audio_files_path, filetype) -> [Document]:
+    loader_class = {
+        "mp3": MP3AudioLoader,
+        "m4a": M4aAudioLoader,
+    }[filetype]
+    if not loader_class:
+        raise ValueError("Invalid file type.")
 
-for doc in docs:
-    print(doc.metadata["source"], doc.page_content)
+    loader = WhisperSpeechToTextLoader(
+        loader=loader_class(audio_files_path)
+    )
+
+    docs = loader.load().docs
+    return docs
+
+
+# Usage example
+audio_path = "path/to/your/audio/files"
+filetype = "mp3"  # or "m4a"
+documents = speech_to_text(audio_path, filetype)
+for doc in documents:
+    print(doc.page_content)
 ```
 
 ## Customization
 
-- If your M4A audio files are located in a different directory, update the `save_dir` variable accordingly.
-
-    ```python
-    save_dir = Path("/path/to/your/audio/files")
-    ```
-
+- Update the `audio_files_path` variable to point to the directory containing your audio files.
+- Set the `filetype` variable to match the format of your audio files: "mp3" for MP3 files or "m4a" for M4A files.
 - You can modify the script to perform additional processing on the resulting text documents or save them to a file if
   needed.
 
 ## Classes
 
-### `MP3AudioLoader`
+### `MP3AudioLoader` and `M4aAudioLoader`
 
-The `MP3AudioLoader` class is responsible for loading MP3 audio files from a specified directory. It inherits from
-the `AbstractAudioLoader` class.
+The `MP3AudioLoader` and `M4aAudioLoader` classes are responsible for loading MP3 and M4A audio files, respectively,
+from a specified directory. They inherit from the `AbstractAudioLoader` class.
 
 ### `WhisperSpeechToTextLoader`
 
 The `WhisperSpeechToTextLoader` class is used to convert speech to text using OpenAI's Whisper API. It takes an instance
-of the `MP3AudioLoader` class as input and performs the speech-to-text conversion on the loaded audio files.
+of either the `MP3AudioLoader` or `M4aAudioLoader` class as input and performs the speech-to-text conversion on the
+loaded audio files.
 
 ## Note
 
@@ -95,4 +101,4 @@ documentation for more information on setting up and using the API.
 
 ---
 
-Feel free to customize the script and the README file based on your specific requirements and project structure.
+Feel free to further customize the README file based on your specific requirements and project structure.
