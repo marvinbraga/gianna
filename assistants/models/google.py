@@ -19,12 +19,28 @@ genai.configure(
 
 
 class GoogleModelsEnum(ModelsEnum):
+    """
+    An enumeration class for Google language models.
+    """
     gemini = 0, "gemini-pro"
 
 
 class GoogleChain(AbstractBasicChain):
+    """
+    A basic chain class for Google language models.
+    """
+
     def __init__(self, model: GoogleModelsEnum, prompt: str, temperature: float = 0.0,
                  verbose: bool = False):
+        """
+        Initialize the Google chain with the specified model, prompt, temperature, and verbosity.
+
+        Args:
+            model (GoogleModelsEnum): The Google language model to use.
+            prompt (str): The prompt for the chain.
+            temperature (float): The temperature for generating responses (default: 0.0).
+            verbose (bool): Whether to enable verbose output (default: False).
+        """
         self._verbose = verbose
         self._temperature = temperature
         self._model = model
@@ -33,6 +49,12 @@ class GoogleChain(AbstractBasicChain):
         )
 
     def _get_chain(self) -> LLMChain:
+        """
+        Get the language model chain for the Google model.
+
+        Returns:
+            LLMChain: The language model chain.
+        """
         chain = self._prompt_template | ChatGoogleGenerativeAI(
             model=self._model.model_name,
             temperature=self._temperature,
@@ -42,11 +64,28 @@ class GoogleChain(AbstractBasicChain):
 
 
 class GoogleFactory(AbstractLLMFactory):
+    """
+    A factory class for creating Google chains.
+    """
+
     def create(self, prompt: str):
+        """
+        Create a Google chain with the specified prompt.
+
+        Args:
+            prompt (str): The prompt for the chain.
+
+        Returns:
+            GoogleChain: The created Google chain.
+        """
         return GoogleChain(self.model_enum, prompt)
 
 
 def register_google_chains():
+    """
+    Register the Google chains with the LLMRegister.
+    This method should always be instantiated in the __init__.py file of the package.
+    """
     register = LLMRegister()
     register.register_factory(
         model_name="gemini",
