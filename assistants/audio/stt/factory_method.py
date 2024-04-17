@@ -9,7 +9,7 @@ from assistants.audio.stt.whisper_local import LocalWhisperSpeechToTextLoader
 load_dotenv(find_dotenv())
 
 
-def speech_to_text(audio_files_path, filetype, local: bool = False) -> [Document]:
+def speech_to_text(audio_files_path, filetype: str = "mp3", local: bool = False) -> [Document]:
     """
     Convert speech from an audio file to text using the specified file type loader and Whisper speech-to-text loader.
 
