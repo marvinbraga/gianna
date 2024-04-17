@@ -6,8 +6,16 @@ authors = ["Marcus Braga <mvbraga@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<=3.13"
+crewai = "^0.28.8"
+crewai-tools = "^0.1.7"
+langchain-google-genai = "^1.0.2"
+langchain-nvidia-ai-endpoints = "^0.0.6"
+langchain-groq = "^0.1.2"
 
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core"]
