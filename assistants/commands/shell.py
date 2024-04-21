@@ -41,7 +41,7 @@ class ShellCommandCompletionPrompt:
 
 
 class ShellCommand(AbstractCommand):
-    activation_key_words = ("shell", "shell command", "run script")
+    activation_key_words = ("shell", "shell command", "run shell")
 
     def __init__(self, name: str, human_companion_name: str, text_to_speech: SpeechCommand):
         self.name = name
