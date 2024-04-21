@@ -2,11 +2,13 @@ import os
 from textwrap import dedent
 
 import pyperclip
+from loguru import logger
 
 from assistants.commands.abstracts import AbstractCommand
+from assistants.commands.register import CommandRegister
 from assistants.commands.speech import SpeechCommand, SpeechType
+from assistants.models.abstracts import AbstractCommandFactory
 from assistants.models.factory_method import get_chain_instance
-from loguru import logger
 
 
 class ShellCommandPrompt:
@@ -39,6 +41,8 @@ class ShellCommandCompletionPrompt:
 
 
 class ShellCommand(AbstractCommand):
+    activation_key_words = ("shell", "shell command", "run script")
+
     def __init__(self, name: str, human_companion_name: str, text_to_speech: SpeechCommand):
         self.name = name
         self.human_companion_name = human_companion_name
@@ -51,6 +55,9 @@ class ShellCommand(AbstractCommand):
             prompt=shell_command_prompt,
         )
         response = chain_processor.process({"command_to_run": prompt}).output
+        self._clip_copy(response)._talk(self._run(), response)
+
+    def _clip_copy(self, response):
         try:
             pyperclip.copy(response)
         except Exception as e:
@@ -61,7 +68,9 @@ class ShellCommand(AbstractCommand):
                 {response}
                 """
             ))
+        return self
 
+    def _run(self):
         completion_prompt = ShellCommandCompletionPrompt(
             self.name,
             self.human_companion_name,
@@ -70,8 +79,33 @@ class ShellCommand(AbstractCommand):
             model_registered_name=os.environ["LLM_DEFAULT_MODEL"],
             prompt=completion_prompt,
         )
+        return completion_chain_processor
+
+    def _talk(self, completion_chain_processor, response):
         completion_response = completion_chain_processor.process({"command_to_run": response}).output
         self.text_to_speech.execute(
             text=completion_response,
             speech_type=SpeechType(os.environ["TTS_DEFAULT_TYPE"]),
         )
+        return self
+
+
+class ShellCommandFactory(AbstractCommandFactory):
+    command_class = ShellCommand
+
+    def create(self, name: str, human_companion_name: str, text_to_speech: SpeechCommand, **kwargs):
+        return self.command_class(
+            name=name, human_companion_name=human_companion_name, text_to_speech=text_to_speech
+        )
+
+
+def register_shell_command():
+    """
+    Register the Shell Command with the CommandRegister.
+    This method should always be instantiated in the __init__.py file of the package.
+    """
+    register = CommandRegister()
+    register.register_factory(
+        command_name="shell",
+        factory_class=ShellCommandFactory,
+    )
