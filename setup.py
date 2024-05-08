@@ -2,15 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name="gianna",
-    version="0.1.3",
+    version="0.1.4",
     author="Marcus Braga",
     author_email="mvbraga@gmail.com",
     description="Generative Intelligent Artificial Neural Network Assistant",
     long_description=open('readme.md').read(),
     long_description_content_type='text/markdown',
     url="https://github.com/marvinbraga/gianna",
-    package_dir={'': 'gianna'},
-    packages=find_packages(where="gianna", exclude=["notebooks", "notebooks.*"]),
+    packages=find_packages(exclude=["notebooks", "notebooks.*"]),
     install_requires=[
         "crewai>=0.28.8",
         "crewai-tools>=0.1.7",
