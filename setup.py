@@ -2,14 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name="gianna",
-    version="0.1.0",
+    version="0.1.1",
     author="Marcus Braga",
     author_email="mvbraga@gmail.com",
     description="Generative Intelligent Artificial Neural Network Assistant",
-    long_description=open('README.md').read(),
+    long_description=open('readme.md').read(),
     long_description_content_type='text/markdown',
-    url="https://github.com/your-username/gianna",
-    packages=find_packages(),
+    url="https://github.com/marvinbraga/gianna",
+    packages=find_packages(where="gianna", exclude=["notebooks", "notebooks.*"]),
     install_requires=[
         "crewai>=0.28.8",
         "crewai-tools>=0.1.7",
@@ -26,8 +26,9 @@ setup(
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: Apache License",
         "Operating System :: OS Independent",
     ],
+    license="Apache License 2.0",
+    keywords="voice-assistant AI CrewAI Langchain OpenAI Google NVIDIA Groq Ollama",
     python_requires='>=3.11,<=3.13',
 )

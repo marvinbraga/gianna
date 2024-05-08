@@ -60,11 +60,11 @@ Once you have Poetry installed, follow these steps to set up Gianna:
 
 ## More Info
 
-- [**LLMs factory** - assistants/models/readme.md](assistants/models/readme.md)
-- [**Recorders** - assistants/audio/recorders/readme.md](assistants/audio/recorders/readme.md)
-- [**SpeechToText** - assistants/audio/stt/readme.md](assistants/audio/stt/readme.md)
-- [**TextToSpeech** - assistants/audio/tts/readme.md](assistants/audio/tts/readme.md)
-- [**Commands** - assistants/commands/readme.md](assistants/commands/readme.md)
+- [**LLMs factory** - assistants/models/readme.md](gianna/assistants/models/readme.md)
+- [**Recorders** - assistants/audio/recorders/readme.md](gianna/assistants/audio/recorders/readme.md)
+- [**SpeechToText** - assistants/audio/stt/readme.md](gianna/assistants/audio/stt/readme.md)
+- [**TextToSpeech** - assistants/audio/tts/readme.md](gianna/assistants/audio/tts/readme.md)
+- [**Commands** - assistants/commands/readme.md](gianna/assistants/commands/readme.md)
 
 ## Contributing
 
