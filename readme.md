@@ -35,7 +35,7 @@ Once you have Poetry installed, follow these steps to set up Gianna:
 
 1. Clone the Gianna repository:
    ```
-   git clone https://github.com/your-username/gianna.git
+   git clone https://github.com/marvinbraga/gianna.git
    ```
 
 2. Navigate to the project directory:
