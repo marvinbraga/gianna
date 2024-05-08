@@ -4,6 +4,31 @@ Gianna is a voice assistant that utilizes CrewAI and Langchain to perform comple
 
 ## Installation
 
+### Prerequisites
+
+- Python 3.10 or higher
+- Poetry (Python package manager)
+
+```shell
+sudo apt update -y 
+```
+
+```shell
+sudo apt install --no-install-recommends -y \
+   build-essential \
+   libpq-dev \
+   libgirepository1.0-dev \
+   libcairo2-dev pkg-config python3-dev \
+   python3-pyaudio portaudio19-dev \
+   libportaudio2
+```
+
+```shell
+sudo apt update -y && sudo apt upgrade -y
+```
+
+### Clone
+
 To get started with Gianna, you'll need to have Poetry installed. Poetry is a dependency management and packaging tool for Python projects. If you don't have Poetry installed, you can follow the installation instructions from the [official Poetry documentation](https://python-poetry.org/docs/#installation).
 
 Once you have Poetry installed, follow these steps to set up Gianna:
@@ -35,10 +60,11 @@ Once you have Poetry installed, follow these steps to set up Gianna:
 
 ## More Info
 
-[LLMs factory - assistants/models/readme.md](assistants/models/readme.md)
-[Recorders - assistants/audio/recorders/readme.md](assistants/audio/recorders/readme.md)
-[SpeechToText - assistants/audio/stt/readme.md](assistants/audio/stt/readme.md)
-[TextToSpeech - assistants/audio/tts/readme.md](assistants/audio/tts/readme.md)
+- [**LLMs factory** - assistants/models/readme.md](assistants/models/readme.md)
+- [**Recorders** - assistants/audio/recorders/readme.md](assistants/audio/recorders/readme.md)
+- [**SpeechToText** - assistants/audio/stt/readme.md](assistants/audio/stt/readme.md)
+- [**TextToSpeech** - assistants/audio/tts/readme.md](assistants/audio/tts/readme.md)
+- [**Commands** - assistants/commands/readme.md](assistants/commands/readme.md)
 
 ## Contributing
 
