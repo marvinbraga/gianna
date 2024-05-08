@@ -1,3 +1,4 @@
+# assistants/commands/shell.py
 import os
 from textwrap import dedent
 
