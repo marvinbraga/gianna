@@ -1,7 +1,7 @@
 from dotenv import load_dotenv, find_dotenv
 
-from assistants.models.factory_method import get_chain_instance
-from assistants.models.registers import LLMRegister
+from gianna.assistants.models.factory_method import get_chain_instance
+from gianna.assistants.models.registers import LLMRegister
 
 load_dotenv(find_dotenv())
 
