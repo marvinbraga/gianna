@@ -27,6 +27,18 @@ sudo apt install --no-install-recommends -y \
 sudo apt update -y && sudo apt upgrade -y
 ```
 
+### Pip
+
+```shell
+pip install -U gianna
+```
+
+### Poetry
+
+```shell
+poetry add gianna
+```
+
 ### Clone
 
 To get started with Gianna, you'll need to have Poetry installed. Poetry is a dependency management and packaging tool for Python projects. If you don't have Poetry installed, you can follow the installation instructions from the [official Poetry documentation](https://python-poetry.org/docs/#installation).
