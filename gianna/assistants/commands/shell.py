@@ -55,20 +55,21 @@ class ShellCommand(AbstractCommand):
             model_registered_name=os.environ["LLM_DEFAULT_MODEL"],
             prompt=shell_command_prompt,
         )
-        response = chain_processor.process({"command_to_run": prompt}).output
+        response = chain_processor.invoke({"command_to_run": prompt}).output
         self._clip_copy(response)._talk(self._run(), response)
 
     def _clip_copy(self, response):
         try:
             pyperclip.copy(response)
         except Exception as e:
-            logger.error(dedent(f"ERRO:\n\n {e}"))
+            logger.warning(dedent(f"Could not copy to clipboard:\n {e}"))
             logger.info(dedent(
                 f"""
                 Response was: 
                 {response}
                 """
             ))
+            # Continue execution even if clipboard fails
         return self
 
     def _run(self):
@@ -83,10 +84,10 @@ class ShellCommand(AbstractCommand):
         return completion_chain_processor
 
     def _talk(self, completion_chain_processor, response):
-        completion_response = completion_chain_processor.process({"command_to_run": response}).output
+        completion_response = completion_chain_processor.invoke({"command_to_run": response}).output
         self.text_to_speech.execute(
             text=completion_response,
-            speech_type=SpeechType(os.environ["TTS_DEFAULT_TYPE"]),
+            speech_type=SpeechType(os.environ.get("TTS_DEFAULT_TYPE", "google")),
         )
         return self
 

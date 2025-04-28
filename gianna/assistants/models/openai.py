@@ -17,6 +17,7 @@ class OpenAIModelsEnum(ModelsEnum):
     """
     gpt35_1106 = 0, "gpt-3.5-turbo-1106"
     gpt4_1106 = 1, "gpt-4-1106-preview"
+    gpt_4o_mini = 2, "gpt-4o-mini"
 
 
 class OpenAIChain(AbstractBasicChain):
@@ -90,4 +91,9 @@ def register_openai_chains():
         model_name="gpt4",
         factory_class=OpenAIFactory,
         model_enum=OpenAIModelsEnum.gpt4_1106
+    )
+    register.register_factory(
+        model_name="gpt-4o-mini",
+        factory_class=OpenAIFactory,
+        model_enum=OpenAIModelsEnum.gpt_4o_mini
     )

@@ -71,6 +71,20 @@ class AbstractBasicChain(metaclass=ABCMeta):
     def process(self, input_data, **kwargs):
         """
         Process the input data using the language model chain.
+        This method is deprecated in favor of invoke().
+
+        Args:
+            input_data: The input data for the chain.
+            **kwargs: Additional keyword arguments for the chain.
+
+        Returns:
+            AbstractBasicChain: The chain instance.
+        """
+        return self.invoke(input_data, **kwargs)
+        
+    def invoke(self, input_data, **kwargs):
+        """
+        Invoke the language model chain with the input data.
 
         Args:
             input_data: The input data for the chain.
