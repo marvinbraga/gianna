@@ -26,7 +26,7 @@ class WaveFilePlayer(AbstractAudioPlayer):
         Play the audio file.
         """
         try:
-            with wave.open(self.audio_file, 'rb') as wave_file:
+            with wave.open(self.audio_file, "rb") as wave_file:
                 data = wave_file.readframes(self._chunk)
                 while data and not self._stop_event.is_set():
                     self._stream.write(data)

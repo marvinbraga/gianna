@@ -1,7 +1,7 @@
 import os
 
-from dotenv import load_dotenv, find_dotenv
-from elevenlabs import play, Voice
+from dotenv import find_dotenv, load_dotenv
+from elevenlabs import Voice, play
 from elevenlabs.client import ElevenLabs
 
 from gianna.assistants.audio.tts.abstracts import AbstractTextToSpeech

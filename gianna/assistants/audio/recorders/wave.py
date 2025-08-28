@@ -20,9 +20,9 @@ class WaveRecorder(AbstractAudioRecorder):
         Returns:
             self: The instance of the WaveRecorder class.
         """
-        with wave.open(os.path.normpath(self.COMMAND_OUTPUT_FILENAME), 'wb') as wf:
+        with wave.open(os.path.normpath(self.COMMAND_OUTPUT_FILENAME), "wb") as wf:
             wf.setnchannels(self._channels)
             wf.setsampwidth(self._audio_interface.get_sample_size(self._format))
             wf.setframerate(self._rate)
-            wf.writeframes(b''.join(self._frames))
+            wf.writeframes(b"".join(self._frames))
         return self

@@ -7,8 +7,17 @@ class WhisperWrapperTranscriber:
     A wrapper class for the Whisper transcription and translation tool.
     """
 
-    def __init__(self, model="large-v2", device="cpu", output_dir=".", verbose=False, threads=20,
-                 language=None, beam_size=None, temperature=None):
+    def __init__(
+        self,
+        model="large-v2",
+        device="cpu",
+        output_dir=".",
+        verbose=False,
+        threads=20,
+        language=None,
+        beam_size=None,
+        temperature=None,
+    ):
         """
         Initialize the WhisperWrapperTranscriber.
 
@@ -75,12 +84,18 @@ class WhisperWrapperTranscriber:
         command = [
             "whisper",
             audio_path,
-            "--model", self.model,
-            "--device", self.device,
-            "--output_dir", self.output_dir,
-            "--verbose", str(self.verbose),
-            "--threads", str(self.threads),
-            "--task", "transcribe"
+            "--model",
+            self.model,
+            "--device",
+            self.device,
+            "--output_dir",
+            self.output_dir,
+            "--verbose",
+            str(self.verbose),
+            "--threads",
+            str(self.threads),
+            "--task",
+            "transcribe",
         ]
         return self._execute(audio_path, command)
 
@@ -99,17 +114,23 @@ class WhisperWrapperTranscriber:
         command = [
             "whisper",
             audio_path,
-            "--model", self.model,
-            "--device", self.device,
-            "--output_dir", self.output_dir,
-            "--verbose", str(self.verbose),
-            "--threads", str(self.threads),
-            "--task", "translate"
+            "--model",
+            self.model,
+            "--device",
+            self.device,
+            "--output_dir",
+            self.output_dir,
+            "--verbose",
+            str(self.verbose),
+            "--threads",
+            str(self.threads),
+            "--task",
+            "translate",
         ]
         return self._execute(audio_path, command)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     transcriber = WhisperWrapperTranscriber()
     path = "/resource/"
     filename = "your_audio_file.m4a"

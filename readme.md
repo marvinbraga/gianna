@@ -1,105 +1,72 @@
-# Gianna: Generative Intelligent Artificial Neural Network Assistant
+# Gianna - Voice Assistant Framework
 
-Gianna is a voice assistant that utilizes CrewAI and Langchain to perform complex tasks. It provides an easy way to create chain instances for working with a simple prompt, a string parser, and various LLM models such as OpenAI, Google, NVIDIA, Groq, and Ollama.
+Gianna is a modular and extensible voice assistant framework built with Python, designed to integrate with various LLM providers, audio processing tools, and command systems.
 
-## Installation
+## Features
 
-### Prerequisites
+- **LLM Integration**: Connect with OpenAI, Google, NVIDIA, Groq, and Ollama models through a unified interface
+- **Audio Processing**:
+  - Play various audio formats (MP3, WAV, OGG, FLAC, M4A, AAC)
+  - Record audio in multiple formats
+  - Speech-to-Text (STT) using Whisper
+  - Text-to-Speech (TTS) using Google, ElevenLabs, and more
+- **Command System**: Execute shell commands and other actions based on voice input
 
-- Python 3.10 or higher
-- Poetry (Python package manager)
+## Quick Start
 
-```shell
-sudo apt update -y 
-```
-
-```shell
-sudo apt install --no-install-recommends -y \
-   build-essential \
-   libpq-dev \
-   libgirepository1.0-dev \
-   libcairo2-dev pkg-config python3-dev \
-   python3-pyaudio portaudio19-dev \
-   libportaudio2
-```
-
-```shell
-sudo apt update -y && sudo apt upgrade -y
-```
-
-### Pip
-
-```shell
-pip install -U gianna
-```
-
-### Poetry
-
-```shell
-poetry add gianna
-```
-
-### Clone
-
-To get started with Gianna, you'll need to have Poetry installed. Poetry is a dependency management and packaging tool for Python projects. If you don't have Poetry installed, you can follow the installation instructions from the [official Poetry documentation](https://python-poetry.org/docs/#installation).
-
-Once you have Poetry installed, follow these steps to set up Gianna:
-
-1. Clone the Gianna repository:
+1. Clone the repository
+2. Create a `.env` file based on `.env.example` with your API keys
+3. Install dependencies:
    ```
-   git clone https://github.com/marvinbraga/gianna.git
+   pip install -e .
    ```
-
-2. Navigate to the project directory:
-   ```
-   cd gianna
-   ```
-
-3. Install the project dependencies using Poetry:
+   or
    ```
    poetry install
    ```
 
-4. Activate the virtual environment created by Poetry:
-   ```
-   poetry shell
-   ```
+4. Run the example:
+   ```python
+   from gianna.assistants.models.factory_method import get_chain_instance
 
-5. Run Gianna:
-   ```
-   python main.py
-   ```
+   # Create a chain instance
+   chain = get_chain_instance(
+       model_registered_name="gpt35",
+       prompt="You are a helpful assistant."
+   )
 
-## More Info
-
-- [**LLMs factory** - assistants/models/readme.md](gianna/assistants/models/readme.md)
-- [**Recorders** - assistants/audio/recorders/readme.md](gianna/assistants/audio/recorders/readme.md)
-- [**SpeechToText** - assistants/audio/stt/readme.md](gianna/assistants/audio/stt/readme.md)
-- [**TextToSpeech** - assistants/audio/tts/readme.md](gianna/assistants/audio/tts/readme.md)
-- [**Commands** - assistants/commands/readme.md](gianna/assistants/commands/readme.md)
-
-## Contributing
-
-We welcome contributions from the community to make Gianna even better! If you'd like to contribute to the project, please follow these steps:
-
-1. Fork the Gianna repository on GitHub.
-
-2. Create a new branch for your feature or bug fix:
-   ```
-   git checkout -b feature/your-feature-name
+   # Process user input
+   response = chain.process({"input": "Tell me about coffee."})
+   print(response.output)
    ```
 
-3. Make your changes and commit them with descriptive commit messages.
+## Environment Variables
 
-4. Push your changes to your forked repository:
-   ```
-   git push origin feature/your-feature-name
-   ```
+Create a `.env` file with the following variables:
 
-5. Open a pull request on the main Gianna repository, describing your changes and why they should be merged.
+```
+# LLM configuration
+LLM_DEFAULT_MODEL=gpt35
 
-We appreciate your contributions and will review your pull request as soon as possible. Together, let's make Gianna an even more powerful and versatile voice assistant!
+# TTS configuration
+TTS_DEFAULT_TYPE=google
 
-If you have any questions or need further assistance, please don't hesitate to reach out to our friendly community on [GitHub Discussions](https://github.com/marvinbraga/gianna/discussions) or [Discord](https://discord.gg/xXaqSaYS).
+# API Keys
+OPENAI_API_KEY=your_openai_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
+ELEVEN_LABS_API_KEY=your_elevenlabs_api_key_here
+```
 
-Happy coding!
+## Architecture
+
+Gianna uses several design patterns:
+
+- **Factory Method**: Create objects without specifying their concrete class
+- **Abstract Factory**: Create families of related objects
+- **Registry Pattern**: Register and retrieve factories dynamically
+
+Check the `/notebooks` directory for detailed examples.
+
+## License
+
+See the LICENSE file for details.

@@ -9,6 +9,7 @@ class TextToSpeechType(Enum):
     """
     Enum representing the available text-to-speech types.
     """
+
     GOOGLE = "google"
     WHISPER = "whisper"
     ELEVEN_LABS = "eleven_labs"

@@ -9,7 +9,7 @@ class AudioRecorder:
     A class for recording audio using a specified audio recorder.
     """
 
-    SOUND_BEEP = Path().absolute().parent / 'resources' / 'beep_short.mp3'
+    SOUND_BEEP = Path().absolute().parent / "resources" / "beep_short.mp3"
 
     def __init__(self, recorder: AbstractAudioRecorder):
         """

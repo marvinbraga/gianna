@@ -1,12 +1,14 @@
 from typing import Iterable
 
-from langchain.document_loaders import BlobLoader, Blob, FileSystemBlobLoader
+from langchain.document_loaders import Blob, BlobLoader
+from langchain_community.document_loaders import FileSystemBlobLoader
 
 
 class AbstractAudioLoader(BlobLoader):
     """
     Abstract base class for audio loaders.
     """
+
     glob = None
 
     def __init__(self, save_dir: str):

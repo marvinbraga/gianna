@@ -9,9 +9,17 @@ class AbstractAudioRecorder(metaclass=ABCMeta):
     """
     Abstract base class for audio recorders.
     """
+
     COMMAND_OUTPUT_FILENAME = None
 
-    def __init__(self, audio_format=pyaudio.paInt16, channels=1, rate=44100, chunk=1024, audio_interface=None):
+    def __init__(
+        self,
+        audio_format=pyaudio.paInt16,
+        channels=1,
+        rate=44100,
+        chunk=1024,
+        audio_interface=None,
+    ):
         """
         Initialize the AbstractAudioRecorder.
 
