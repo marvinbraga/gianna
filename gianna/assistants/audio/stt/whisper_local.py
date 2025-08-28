@@ -1,6 +1,8 @@
-from langchain.document_loaders.generic import GenericLoader
+from langchain_community.document_loaders.generic import GenericLoader
 
-from gianna.assistants.audio.stt.parsers.whisper_local.parsers import WhisperCommandParser
+from gianna.assistants.audio.stt.parsers.whisper_local.parsers import (
+    WhisperCommandParser,
+)
 
 
 class LocalWhisperSpeechToTextLoader:

@@ -33,6 +33,7 @@ class AbstractCommandFactory(metaclass=ABCMeta):
     """
     An abstract base class for command factories.
     """
+
     command_class = None
 
     def __init__(self, command_name: str):

@@ -88,4 +88,3 @@ This method returns a list of activation keywords for all registered commands, a
 available for use.
 
 ---
-

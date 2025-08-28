@@ -81,7 +81,7 @@ class AbstractBasicChain(metaclass=ABCMeta):
             AbstractBasicChain: The chain instance.
         """
         return self.invoke(input_data, **kwargs)
-        
+
     def invoke(self, input_data, **kwargs):
         """
         Invoke the language model chain with the input data.

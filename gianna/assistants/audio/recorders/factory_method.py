@@ -21,6 +21,4 @@ def get_recorder(filename: str | Path) -> AudioRecorder:
         >>> # Perform any necessary actions while recording
         >>> audio_recorder.stop()
     """
-    return AudioRecorder(
-        AudioRecorderFactory(audio_file=filename).create_recorder()
-    )
+    return AudioRecorder(AudioRecorderFactory(audio_file=filename).create_recorder())

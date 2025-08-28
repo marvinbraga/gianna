@@ -4,7 +4,9 @@ from langchain_community.document_loaders import Blob
 from langchain_community.document_loaders.base import BaseBlobParser
 from langchain_core.documents import Document
 
-from gianna.assistants.audio.stt.parsers.whisper_local.whisper_cmd import WhisperWrapperTranscriber
+from gianna.assistants.audio.stt.parsers.whisper_local.whisper_cmd import (
+    WhisperWrapperTranscriber,
+)
 
 
 class WhisperCommandParser(BaseBlobParser):
@@ -12,8 +14,17 @@ class WhisperCommandParser(BaseBlobParser):
     A parser that uses the Whisper command-line tool to transcribe audio files.
     """
 
-    def __init__(self, model="large-v2", device="cpu", output_dir=".", verbose=False, threads=20,
-                 language=None, beam_size=None, temperature=None):
+    def __init__(
+        self,
+        model="large-v2",
+        device="cpu",
+        output_dir=".",
+        verbose=False,
+        threads=20,
+        language=None,
+        beam_size=None,
+        temperature=None,
+    ):
         """
         Initialize the WhisperCommandParser.
 
@@ -36,8 +47,14 @@ class WhisperCommandParser(BaseBlobParser):
         self.beam_size = beam_size
         self.temperature = temperature
         self.model = WhisperWrapperTranscriber(
-            model, self.device, self.output_dir, self.verbose, self.threads,
-            self.language, self.beam_size, self.temperature,
+            model,
+            self.device,
+            self.output_dir,
+            self.verbose,
+            self.threads,
+            self.language,
+            self.beam_size,
+            self.temperature,
         )
 
     def lazy_parse(self, blob: Blob) -> Iterator[Document]:

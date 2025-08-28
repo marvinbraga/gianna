@@ -1,6 +1,6 @@
-from dotenv import load_dotenv, find_dotenv
-from langchain.document_loaders.generic import GenericLoader
-from langchain.document_loaders.parsers import OpenAIWhisperParser
+from dotenv import find_dotenv, load_dotenv
+from langchain_community.document_loaders.generic import GenericLoader
+from langchain_community.document_loaders.parsers.audio import OpenAIWhisperParser
 
 load_dotenv(find_dotenv())
 

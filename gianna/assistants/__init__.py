@@ -1,5 +1,4 @@
 from gianna.assistants.commands.shell import register_shell_command
-
 from gianna.assistants.models.google import register_google_chains
 from gianna.assistants.models.groq import register_groq_chains
 from gianna.assistants.models.nvidia import register_nvidia_chains

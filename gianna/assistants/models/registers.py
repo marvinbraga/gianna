@@ -2,6 +2,7 @@ class LLMRegister:
     """
     A singleton class that registers and retrieves factories for language models.
     """
+
     _instance = None
     _factories = {}
 
@@ -57,4 +58,7 @@ class LLMRegister:
             >>> for model_name, factory_class in models:
             ...     print(f"Model: {model_name}, Factory: {factory_class}")
         """
-        return [(model_name, factory_class) for model_name, (factory_class, _) in cls._factories.items()]
+        return [
+            (model_name, factory_class)
+            for model_name, (factory_class, _) in cls._factories.items()
+        ]

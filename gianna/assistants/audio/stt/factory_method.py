@@ -1,4 +1,4 @@
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
 from langchain_core.documents import Document
 
 from gianna.assistants.audio.stt.m4a import M4aAudioLoader
@@ -9,7 +9,9 @@ from gianna.assistants.audio.stt.whisper_local import LocalWhisperSpeechToTextLo
 load_dotenv(find_dotenv())
 
 
-def speech_to_text(audio_files_path, filetype: str = "mp3", local: bool = False) -> [Document]:
+def speech_to_text(
+    audio_files_path, filetype: str = "mp3", local: bool = False
+) -> [Document]:
     """
     Convert speech from an audio file to text using the specified file type loader and Whisper speech-to-text loader.
 
@@ -38,9 +40,9 @@ def speech_to_text(audio_files_path, filetype: str = "mp3", local: bool = False)
     if not loader_class:
         raise ValueError("Invalid file type.")
 
-    whisper_class = LocalWhisperSpeechToTextLoader if local else WhisperSpeechToTextLoader
-    loader = whisper_class(
-        loader=loader_class(audio_files_path)
+    whisper_class = (
+        LocalWhisperSpeechToTextLoader if local else WhisperSpeechToTextLoader
     )
+    loader = whisper_class(loader=loader_class(audio_files_path))
 
     return loader.load().docs

@@ -18,7 +18,9 @@ class CommandRegister:
     @classmethod
     def get_factory(cls, activation_key_word):
         if activation_key_word not in cls._factories:
-            raise ValueError(f'No factory registered for the command "{activation_key_word}".')
+            raise ValueError(
+                f'No factory registered for the command "{activation_key_word}".'
+            )
         factory_class, command_name = cls._factories[activation_key_word]
         return factory_class(command_name)
 

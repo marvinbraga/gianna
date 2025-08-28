@@ -1,18 +1,19 @@
 from enum import Enum
 
-from dotenv import load_dotenv, find_dotenv
+import openai
+from dotenv import find_dotenv, load_dotenv
 
 from gianna.assistants.audio.players.factory_method import play_audio
 from gianna.assistants.audio.tts.abstracts import AbstractTextToSpeech
 
 load_dotenv(find_dotenv())
-import openai
 
 
 class WhisperVoices(Enum):
     """
     Enum representing the available voices for Whisper text-to-speech.
     """
+
     ALLOY = "alloy"
     ECHO = "echo"
     FABLE = "fable"

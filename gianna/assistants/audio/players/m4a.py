@@ -1,9 +1,7 @@
 import threading
 
-from pydub import AudioSegment
-from pydub.playback import play
-
 from gianna.assistants.audio.players.abstract_players import AbstractAudioPlayer
+from gianna.assistants.audio.pydub_utils import AudioSegment, play
 
 
 class M4AFilePlayer(AbstractAudioPlayer):

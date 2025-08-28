@@ -1,57 +1,123 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
-[project]
+[tool.poetry]
 name = "gianna"
 version = "0.1.4"
 description = "Generative Intelligent Artificial Neural Network Assistant"
 readme = "readme.md"
-authors = [
-    {name = "Marcus Braga", email = "mvbraga@gmail.com"}
-]
-license = {text = "Apache License 2.0"}
-requires-python = ">=3.11,<=3.13"
+authors = ["Marcus Braga <mvbraga@gmail.com>"]
+license = "Apache-2.0"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-keywords = ["voice-assistant", "AI", "CrewAI", "Langchain", "OpenAI", "Google", "NVIDIA", "Groq", "Ollama"]
-dependencies = [
-    "crewai>=0.28.8",
-    "langchain>=0.3.20",
-    "langchain-google-genai>=2.1.2",
-    "langchain-anthropic>=0.3.9",
-    "langchain-community>=0.3.19",
-    "langchain-core>=0.3.44",
-    "langchain-groq>=0.2.5",
-    "langchain-openai>=0.3.8",
-    "langchain-text-splitters>=0.3.6",
-    "langchain-xai>=0.2.1",
-    "langchain-nvidia-ai-endpoints>=0.0.6",
-    "langgraph>=0.3.9",
-    "loguru>=0.7.3",
-    "lxml>=5.3.1",
-    "markdown>=3.7",
-    "nbformat>=5.10.4",
-    "python-dotenv>=1.0.1",
-    "python-magic>=0.4.27",
-    "pyyaml>=6.0.2",
-    "tavily-python>=0.5.1",
-    "tqdm>=4.67.1",
-    "typing-extensions>=4.12.2",
-    "pydantic>=2.11.3",
-    "pydub>=0.25.1",
-    "pyaudio>=0.2.14",
-    "gtts>=2.5.1",
-    "openai>=1.20.0",
-    "elevenlabs>=1.0.5",
-    "pyperclip>=1.8.2",
-    "crewai-tools>=0.0.1",
-    "notebook>=7.4.1",
-]
+keywords = ["voice-assistant", "AI", "Langchain", "Langgraph", "OpenAI", "Google", "NVIDIA", "Groq", "Ollama"]
 
-[dependency-groups]
-dev = [
-    "jupyter>=1.1.1",
+[tool.poetry.dependencies]
+python = "^3.11,<3.14"
+langchain = "^0.3.27"
+langgraph = "^0.6.6"
+langchain-google-genai = "^2.1.10"
+langchain-anthropic = "^0.3.19"
+langchain-community = "^0.3.29"
+langchain-core = "^0.3.75"
+langchain-groq = "^0.3.7"
+langchain-openai = "^0.3.32"
+langchain-text-splitters = "^0.3.9"
+langchain-xai = "^0.2.5"
+langchain-nvidia-ai-endpoints = "^0.3.16"
+loguru = "^0.7.3"
+lxml = "^6.0.1"
+markdown = "^3.8.2"
+nbformat = "^5.10.4"
+python-dotenv = "^1.1.1"
+python-magic = "^0.4.27"
+pyyaml = "^6.0.2"
+tavily-python = "^0.7.11"
+tqdm = "^4.67.1"
+typing-extensions = "^4.15.0"
+pydantic = "^2.11.7"
+pydub = "^0.25.1"
+pyaudio = "^0.2.14"
+gtts = "^2.5.4"
+openai = "^1.102.0"
+elevenlabs = "^2.12.1"
+pyperclip = "^1.9.0"
+notebook = "^7.4.5"
+audioop-lts = {markers = "python_version >= \"3.13\"", version = "^0.2.2"}
+langchain-cohere = "^0.4.5"
+invoke = "^2.2.0"
+black = {extras = ["jupyter"], version = "^25.1.0"}
+
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.1.1"
+pre-commit = "^4.3.0"
+black = "^25.1.0"
+isort = "^6.0.1"
+flake8 = "^7.3.0"
+mypy = "^1.17.1"
+
+# Black configuration
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+# isort configuration
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+src_paths = ["gianna", "notebooks"]
+
+# mypy configuration
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+ignore_missing_imports = true
+show_error_codes = true
+
+
+# flake8 configuration (in setup.cfg or .flake8)
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503", "E501"]
+exclude = [
+    ".git",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    "build",
+    "dist",
+    "*.egg-info",
 ]
