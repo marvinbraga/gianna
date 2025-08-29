@@ -1,0 +1,294 @@
+# Configuração do Sistema de Otimização de Performance Gianna
+#
+# Este arquivo demonstra as configurações disponíveis para diferentes
+# ambientes e cenários de uso do sistema de otimização.
+
+# =============================================================================
+# CONFIGURAÇÃO DE DESENVOLVIMENTO
+# =============================================================================
+development:
+  # PerformanceOptimizer
+  performance:
+    cache_size: 100              # Cache pequeno para desenvolvimento
+    cache_ttl: 1800             # TTL de 30 minutos
+    max_connections: 5          # Poucas conexões
+    max_workers: 2              # Poucos workers para debugging
+    redis_url: null             # Sem Redis em dev (apenas memória)
+
+  # PerformanceMonitor
+  monitoring:
+    collection_interval: 10     # Coleta a cada 10 segundos
+    enable_profiling: true      # Profiling ativo para debugging
+    profiling_threshold: 0.5    # Profile operações > 500ms
+    profiling_sample_rate: 1.0  # 100% das operações (dev)
+
+  # ResourceManager
+  resources:
+    max_workers: 2              # Poucos workers em dev
+    throttle_rate: 100.0        # Sem throttling agressivo
+    throttle_burst: 50          # Burst generoso
+    rate_limit_per_minute: 1000 # Rate limit muito alto
+    circuit_breaker:
+      failure_threshold: 10     # Mais tolerante a falhas
+      recovery_timeout: 30      # Recovery rápido
+
+  # Alertas (menos restritivos)
+  alerts:
+    cpu_warning: 90             # CPU > 90%
+    cpu_critical: 95            # CPU > 95%
+    memory_warning: 90          # Memória > 90%
+    memory_critical: 95         # Memória > 95%
+    response_time_warning: 2000 # > 2 segundos
+
+  # Cache multi-layer
+  cache:
+    layers:
+      memory:
+        enabled: true
+        max_size: 100
+        max_memory_mb: 50
+      redis:
+        enabled: false          # Desabilitado em dev
+      sqlite:
+        enabled: true
+        max_entries: 1000
+        db_path: "dev_cache.db"
+
+# =============================================================================
+# CONFIGURAÇÃO DE PRODUÇÃO
+# =============================================================================
+production:
+  # PerformanceOptimizer
+  performance:
+    cache_size: 5000            # Cache grande
+    cache_ttl: 3600            # TTL de 1 hora
+    max_connections: 20        # Mais conexões
+    max_workers: 8             # Mais workers
+    redis_url: "redis://localhost:6379/0"  # Redis para produção
+
+  # PerformanceMonitor
+  monitoring:
+    collection_interval: 30     # Coleta a cada 30 segundos
+    enable_profiling: false     # Sem profiling em produção
+    profiling_threshold: 2.0    # Apenas operações muito lentas
+    profiling_sample_rate: 0.01 # 1% de amostragem
+
+  # ResourceManager
+  resources:
+    max_workers: 8              # Mais workers
+    throttle_rate: 20.0         # Throttling moderado
+    throttle_burst: 40          # Burst controlado
+    rate_limit_per_minute: 100  # Rate limit restritivo
+    circuit_breaker:
+      failure_threshold: 5      # Menos tolerante
+      recovery_timeout: 60      # Recovery mais lento
+
+  # Alertas (mais restritivos)
+  alerts:
+    cpu_warning: 70             # CPU > 70%
+    cpu_critical: 85            # CPU > 85%
+    memory_warning: 75          # Memória > 75%
+    memory_critical: 90         # Memória > 90%
+    response_time_warning: 1000 # > 1 segundo
+
+  # Cache multi-layer
+  cache:
+    layers:
+      memory:
+        enabled: true
+        max_size: 2000
+        max_memory_mb: 200
+      redis:
+        enabled: true
+        url: "redis://localhost:6379/0"
+        compression: true
+        key_prefix: "gianna:prod:"
+      sqlite:
+        enabled: true
+        max_entries: 50000
+        db_path: "prod_cache.db"
+
+# =============================================================================
+# CONFIGURAÇÃO PARA ALTO VOLUME
+# =============================================================================
+high_volume:
+  # PerformanceOptimizer
+  performance:
+    cache_size: 10000           # Cache muito grande
+    cache_ttl: 7200            # TTL de 2 horas
+    max_connections: 50        # Muitas conexões
+    max_workers: 16            # Muitos workers
+    redis_url: "redis://localhost:6379/1"  # Redis dedicado
+
+  # PerformanceMonitor
+  monitoring:
+    collection_interval: 60     # Coleta a cada minuto
+    enable_profiling: false     # Sem profiling
+    profiling_threshold: 5.0    # Apenas operações extremamente lentas
+    profiling_sample_rate: 0.001 # 0.1% de amostragem
+
+  # ResourceManager
+  resources:
+    max_workers: 16             # Máximo de workers
+    throttle_rate: 50.0         # Throttling alto
+    throttle_burst: 100         # Burst grande
+    rate_limit_per_minute: 200  # Rate limit alto
+    circuit_breaker:
+      failure_threshold: 3      # Muito restritivo
+      recovery_timeout: 120     # Recovery lento
+
+  # Alertas (muito restritivos)
+  alerts:
+    cpu_warning: 60             # CPU > 60%
+    cpu_critical: 80            # CPU > 80%
+    memory_warning: 70          # Memória > 70%
+    memory_critical: 85         # Memória > 85%
+    response_time_warning: 500  # > 500ms
+
+  # Cache multi-layer
+  cache:
+    layers:
+      memory:
+        enabled: true
+        max_size: 5000
+        max_memory_mb: 500
+      redis:
+        enabled: true
+        url: "redis://localhost:6379/1"
+        compression: true
+        key_prefix: "gianna:hv:"
+      sqlite:
+        enabled: true
+        max_entries: 100000
+        db_path: "hv_cache.db"
+
+# =============================================================================
+# CONFIGURAÇÃO PARA TESTES
+# =============================================================================
+testing:
+  # PerformanceOptimizer
+  performance:
+    cache_size: 50              # Cache muito pequeno
+    cache_ttl: 300             # TTL de 5 minutos
+    max_connections: 2         # Poucas conexões
+    max_workers: 1             # Worker único
+    redis_url: null            # Sem Redis
+
+  # PerformanceMonitor
+  monitoring:
+    collection_interval: 5      # Coleta rápida para testes
+    enable_profiling: false     # Sem profiling
+    profiling_threshold: 10.0   # Threshold alto
+    profiling_sample_rate: 0.0  # Sem sampling
+
+  # ResourceManager
+  resources:
+    max_workers: 1              # Worker único
+    throttle_rate: 1000.0       # Sem throttling
+    throttle_burst: 1000        # Burst ilimitado
+    rate_limit_per_minute: 10000 # Rate limit muito alto
+    circuit_breaker:
+      failure_threshold: 100    # Muito tolerante
+      recovery_timeout: 1       # Recovery imediato
+
+  # Alertas (desabilitados para testes)
+  alerts:
+    cpu_warning: 100            # Nunca dispara
+    cpu_critical: 100           # Nunca dispara
+    memory_warning: 100         # Nunca dispara
+    memory_critical: 100        # Nunca dispara
+    response_time_warning: 10000 # Nunca dispara
+
+  # Cache apenas em memória
+  cache:
+    layers:
+      memory:
+        enabled: true
+        max_size: 50
+        max_memory_mb: 10
+      redis:
+        enabled: false
+      sqlite:
+        enabled: false
+
+# =============================================================================
+# CONFIGURAÇÃO PERSONALIZADA
+# =============================================================================
+custom:
+  # Use esta seção para suas configurações específicas
+  # Copie de um dos ambientes acima e modifique conforme necessário
+
+  # Exemplo: Configuração híbrida dev-prod
+  performance:
+    cache_size: 1000            # Meio termo
+    cache_ttl: 2400            # TTL de 40 minutos
+    max_connections: 10        # Conexões moderadas
+    max_workers: 4             # Workers moderados
+    redis_url: "redis://localhost:6379/2"
+
+  monitoring:
+    collection_interval: 20     # Coleta moderada
+    enable_profiling: true      # Com profiling
+    profiling_threshold: 1.0    # Threshold moderado
+    profiling_sample_rate: 0.1  # 10% de amostragem
+
+  resources:
+    max_workers: 4
+    throttle_rate: 30.0
+    throttle_burst: 60
+    rate_limit_per_minute: 150
+    circuit_breaker:
+      failure_threshold: 7
+      recovery_timeout: 45
+
+  alerts:
+    cpu_warning: 75
+    cpu_critical: 90
+    memory_warning: 80
+    memory_critical: 95
+    response_time_warning: 1500
+
+  cache:
+    layers:
+      memory:
+        enabled: true
+        max_size: 1000
+        max_memory_mb: 100
+      redis:
+        enabled: true
+        url: "redis://localhost:6379/2"
+        compression: true
+        key_prefix: "gianna:custom:"
+      sqlite:
+        enabled: true
+        max_entries: 10000
+        db_path: "custom_cache.db"
+
+# =============================================================================
+# CONFIGURAÇÕES GLOBAIS
+# =============================================================================
+global:
+  # Logging
+  logging:
+    level: "INFO"               # DEBUG, INFO, WARNING, ERROR
+    file_path: null             # null = apenas console
+    format: "detailed"          # simple, detailed, json
+
+  # Cache warming (pré-carregamento)
+  cache_warming:
+    enabled: false              # Desabilitado por padrão
+    patterns: []                # Padrões para pre-cache
+    interval: 3600              # Intervalo de warming (1h)
+
+  # Métricas exportadas
+  metrics:
+    export_enabled: false       # Exportar para sistemas externos
+    export_format: "prometheus" # prometheus, influxdb, custom
+    export_interval: 30         # Intervalo de exportação
+
+  # Integração
+  integration:
+    core_state: true            # Integrar com CoreState
+    llm_chains: true            # Integrar com chains LLM
+    audio_pipeline: true        # Integrar com pipeline de áudio
+    memory_system: true         # Integrar com sistema de memória

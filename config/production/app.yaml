@@ -1,0 +1,141 @@
+# Production Configuration for Gianna
+# Main application settings
+
+app:
+  name: "Gianna"
+  version: "0.1.4"
+  environment: "production"
+  debug: false
+
+  # Server settings
+  server:
+    host: "0.0.0.0"
+    port: 8000
+    workers: 4
+    timeout: 30
+    max_connections: 1000
+
+  # Security settings
+  security:
+    cors_origins: []
+    trusted_hosts: []
+    ssl_required: true
+    rate_limit:
+      requests_per_minute: 60
+      burst: 100
+
+  # Database settings
+  database:
+    connection_pool:
+      min_connections: 5
+      max_connections: 20
+      connection_timeout: 30
+    backup:
+      enabled: true
+      interval_hours: 6
+      retention_days: 30
+
+  # Logging configuration
+  logging:
+    level: "INFO"
+    format: "json"
+    structured: true
+    disable_existing_loggers: false
+
+    handlers:
+      console:
+        enabled: true
+        level: "INFO"
+      file:
+        enabled: true
+        level: "WARNING"
+        rotation: "100 MB"
+        retention: "30 days"
+      syslog:
+        enabled: true
+        facility: "local0"
+
+  # Monitoring and metrics
+  monitoring:
+    enabled: true
+    metrics_endpoint: "/metrics"
+    health_endpoint: "/health"
+    readiness_endpoint: "/ready"
+
+    prometheus:
+      enabled: true
+      port: 9090
+
+    alerts:
+      enabled: true
+      channels:
+        - slack
+        - email
+
+  # Cache configuration
+  cache:
+    redis:
+      enabled: true
+      host: "redis"
+      port: 6379
+      db: 0
+      max_connections: 50
+      ttl_default: 3600
+
+  # Audio processing settings
+  audio:
+    processing:
+      quality: "high"
+      max_file_size: "50MB"
+      formats: ["mp3", "wav", "m4a", "ogg", "flac", "aac"]
+      temp_directory: "/tmp/gianna/audio"
+      cleanup_interval: 300
+
+    tts:
+      cache_enabled: true
+      cache_ttl: 86400
+      concurrent_requests: 10
+
+    stt:
+      model: "whisper-large-v3"
+      language: "auto"
+      temperature: 0.0
+
+  # LLM settings
+  llm:
+    default_provider: "openai"
+    timeout: 30
+    max_retries: 3
+    cache_enabled: true
+    cache_ttl: 3600
+
+    rate_limits:
+      openai: 50
+      anthropic: 30
+      google: 40
+      groq: 100
+
+  # Memory and learning
+  memory:
+    semantic:
+      enabled: true
+      embedding_model: "text-embedding-3-small"
+      vector_store: "chroma"
+      max_memories: 10000
+
+    conversation:
+      enabled: true
+      max_history: 50
+      compression_threshold: 100
+
+  # Performance settings
+  performance:
+    async_processing: true
+    batch_processing: true
+    connection_pooling: true
+    lazy_loading: true
+
+    resource_limits:
+      memory_limit: "2GB"
+      cpu_limit: "2000m"
+      disk_space_limit: "10GB"
