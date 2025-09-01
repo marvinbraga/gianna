@@ -1,0 +1,105 @@
+# Environment-specific configurations for different production stages
+
+environments:
+  staging:
+    app:
+      debug: true
+      log_level: "DEBUG"
+    database:
+      name: "gianna_staging"
+    monitoring:
+      alerts:
+        enabled: false
+    performance:
+      resource_limits:
+        memory_limit: "1GB"
+        cpu_limit: "1000m"
+
+  production:
+    app:
+      debug: false
+      log_level: "INFO"
+    database:
+      name: "gianna_production"
+    monitoring:
+      alerts:
+        enabled: true
+    performance:
+      resource_limits:
+        memory_limit: "2GB"
+        cpu_limit: "2000m"
+
+  canary:
+    app:
+      debug: false
+      log_level: "INFO"
+    database:
+      name: "gianna_canary"
+    monitoring:
+      alerts:
+        enabled: true
+        channels:
+          - slack
+    traffic:
+      percentage: 5
+    performance:
+      resource_limits:
+        memory_limit: "1GB"
+        cpu_limit: "1000m"
+
+# Feature flags
+features:
+  voice_streaming:
+    enabled: true
+    environments: ["staging", "production", "canary"]
+
+  advanced_memory:
+    enabled: true
+    environments: ["production"]
+
+  experimental_agents:
+    enabled: false
+    environments: ["staging"]
+
+  beta_features:
+    enabled: false
+    environments: []
+
+# Security configurations per environment
+security:
+  staging:
+    ssl_required: false
+    rate_limit:
+      requests_per_minute: 120
+    cors_origins:
+      - "http://localhost:3000"
+      - "http://localhost:8080"
+
+  production:
+    ssl_required: true
+    rate_limit:
+      requests_per_minute: 60
+    cors_origins: []
+
+  canary:
+    ssl_required: true
+    rate_limit:
+      requests_per_minute: 100
+    cors_origins: []
+
+# Resource scaling configurations
+scaling:
+  staging:
+    min_replicas: 1
+    max_replicas: 3
+    target_cpu_utilization: 70
+
+  production:
+    min_replicas: 3
+    max_replicas: 10
+    target_cpu_utilization: 60
+
+  canary:
+    min_replicas: 1
+    max_replicas: 2
+    target_cpu_utilization: 70

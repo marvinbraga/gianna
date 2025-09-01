@@ -1,0 +1,209 @@
+# Prometheus alerting rules for Gianna
+
+groups:
+  - name: gianna.alerts
+    interval: 30s
+    rules:
+      # High CPU usage alert
+      - alert: HighCPUUsage
+        expr: gianna_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage on Gianna"
+          description: "CPU usage is {{ $value }}% for more than 5 minutes"
+
+      # Critical CPU usage alert
+      - alert: CriticalCPUUsage
+        expr: gianna_cpu_usage_percent > 95
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Critical CPU usage on Gianna"
+          description: "CPU usage is {{ $value }}% for more than 2 minutes"
+
+      # High memory usage alert
+      - alert: HighMemoryUsage
+        expr: gianna_memory_usage_bytes / (1024*1024*1024) > 1.5
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage on Gianna"
+          description: "Memory usage is {{ $value }}GB for more than 5 minutes"
+
+      # Disk space alert
+      - alert: LowDiskSpace
+        expr: gianna_disk_usage_percent > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Low disk space on Gianna"
+          description: "Disk usage is {{ $value }}% for more than 5 minutes"
+
+      # Critical disk space alert
+      - alert: CriticalDiskSpace
+        expr: gianna_disk_usage_percent > 95
+        for: 1m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Critical disk space on Gianna"
+          description: "Disk usage is {{ $value }}% for more than 1 minute"
+
+      # High error rate alert
+      - alert: HighErrorRate
+        expr: rate(gianna_errors_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "High error rate in Gianna"
+          description: "Error rate is {{ $value }} errors/second over 5 minutes"
+
+      # LLM provider failures
+      - alert: LLMProviderFailure
+        expr: rate(gianna_llm_requests_total{status="error"}[5m]) > 5
+        for: 3m
+        labels:
+          severity: warning
+          component: llm
+        annotations:
+          summary: "High LLM provider failure rate"
+          description: "LLM provider {{ $labels.provider }} has {{ $value }} failures/second"
+
+      # Audio processing failures
+      - alert: AudioProcessingFailure
+        expr: rate(gianna_audio_processing_total{status="error"}[5m]) > 2
+        for: 3m
+        labels:
+          severity: warning
+          component: audio
+        annotations:
+          summary: "High audio processing failure rate"
+          description: "Audio processing has {{ $value }} failures/second for operation {{ $labels.operation }}"
+
+      # Cache hit rate too low
+      - alert: LowCacheHitRate
+        expr: gianna_cache_hit_rate < 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value }} (50% threshold) for more than 10 minutes"
+
+      # Service down alert
+      - alert: GiannaServiceDown
+        expr: up{job="gianna-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "Gianna service is down"
+          description: "Gianna application has been down for more than 1 minute"
+
+      # Health check failures
+      - alert: HealthCheckFailure
+        expr: up{job="gianna-health"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: health
+        annotations:
+          summary: "Gianna health checks failing"
+          description: "Health checks have been failing for more than 2 minutes"
+
+      # High request latency
+      - alert: HighRequestLatency
+        expr: histogram_quantile(0.95, rate(gianna_request_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: performance
+        annotations:
+          summary: "High request latency"
+          description: "95th percentile latency is {{ $value }}s for more than 5 minutes"
+
+      # Database connection issues
+      - alert: DatabaseConnectionIssue
+        expr: rate(gianna_errors_total{component="database"}[5m]) > 1
+        for: 3m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection issues"
+          description: "Database errors occurring at {{ $value }} errors/second"
+
+  - name: gianna.performance
+    interval: 60s
+    rules:
+      # Slow LLM responses
+      - alert: SlowLLMResponse
+        expr: histogram_quantile(0.95, rate(gianna_llm_duration_seconds_bucket[10m])) > 30
+        for: 5m
+        labels:
+          severity: warning
+          component: llm
+        annotations:
+          summary: "Slow LLM responses"
+          description: "95th percentile LLM response time is {{ $value }}s for {{ $labels.provider }}"
+
+      # Memory leak detection
+      - alert: PossibleMemoryLeak
+        expr: increase(gianna_memory_usage_bytes[1h]) > 500*1024*1024
+        for: 1h
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Possible memory leak detected"
+          description: "Memory usage increased by {{ $value | humanize }}B over 1 hour"
+
+      # Long conversation detection
+      - alert: LongConversation
+        expr: histogram_quantile(0.95, rate(gianna_conversation_length_bucket[1h])) > 100
+        for: 30m
+        labels:
+          severity: info
+          component: conversation
+        annotations:
+          summary: "Long conversations detected"
+          description: "95th percentile conversation length is {{ $value }} turns"
+
+  - name: gianna.business
+    interval: 300s
+    rules:
+      # Low user activity
+      - alert: LowUserActivity
+        expr: rate(gianna_requests_total[1h]) < 1
+        for: 2h
+        labels:
+          severity: info
+          component: business
+        annotations:
+          summary: "Low user activity"
+          description: "Request rate is {{ $value }} requests/hour for 2 hours"
+
+      # High token usage
+      - alert: HighTokenUsage
+        expr: rate(gianna_llm_tokens_total[1h]) > 10000
+        for: 1h
+        labels:
+          severity: info
+          component: business
+        annotations:
+          summary: "High token usage"
+          description: "Token usage is {{ $value }} tokens/hour for 1 hour"
