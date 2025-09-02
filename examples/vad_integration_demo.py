@@ -6,11 +6,17 @@ Gianna's audio recording and processing pipeline.
 """
 
 import logging
+import sys
 import threading
 import time
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
+
+# Add project root to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 from gianna.assistants.audio.vad import VoiceActivityDetector, create_vad_detector
 

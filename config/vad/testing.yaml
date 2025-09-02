@@ -1,0 +1,132 @@
+# Testing VAD Configuration
+# Configuration for automated testing and validation
+
+# Inherit from base configuration
+extends: "base.yaml"
+
+vad:
+  log_level: "DEBUG"
+  default_algorithm: "webrtc"
+
+  preprocessing:
+    normalize_audio: true
+    noise_reduction: true
+    high_pass_filter: true
+    low_pass_filter: true
+
+  performance:
+    batch_processing: true
+    max_concurrent_streams: 8  # High concurrency for testing
+    memory_limit_mb: 2048  # Large memory for test datasets
+
+  output:
+    save_segments: true
+    save_metrics: true
+    export_format: "json"
+    output_directory: "./test_results"
+
+  monitoring:
+    enable_metrics: true
+    log_decisions: true
+    performance_tracking: true
+
+# Comprehensive algorithm testing
+algorithms:
+  webrtc:
+    aggressiveness: 2
+    frame_duration_ms: 10  # Fine-grained for testing
+    sample_rate: 16000
+
+  energy_based:
+    threshold: 0.01
+    frame_length: 1024
+    hop_length: 256
+
+  spectral_centroid:
+    threshold: 800
+    frame_length: 1024
+    hop_length: 256
+
+  zero_crossing_rate:
+    threshold: 0.05
+    frame_length: 1024
+    hop_length: 256
+
+  # Machine Learning algorithms for comprehensive testing
+  ml_vad:
+    model_path: "./models/test_vad_model.pth"
+    confidence_threshold: 0.5
+    batch_size: 64
+
+  ensemble:
+    algorithms: ["webrtc", "energy_based", "spectral_centroid"]
+    voting_strategy: "weighted_average"
+    weights: [0.5, 0.3, 0.2]
+
+# Test-specific audio settings
+audio:
+  supported_formats: ["wav", "mp3", "flac", "m4a", "ogg", "aac"]
+  default_sample_rate: 16000
+  default_channels: 1
+  buffer_size: 1024
+
+# Comprehensive testing configuration
+testing:
+  enabled: true
+
+  # Test datasets
+  datasets:
+    - name: "unit_tests"
+      path: "./test_data/unit"
+      description: "Basic functionality tests"
+
+    - name: "integration_tests"
+      path: "./test_data/integration"
+      description: "Integration testing with different audio formats"
+
+    - name: "performance_tests"
+      path: "./test_data/performance"
+      description: "Performance and stress testing"
+
+    - name: "edge_cases"
+      path: "./test_data/edge_cases"
+      description: "Edge cases and error conditions"
+
+  # Evaluation metrics
+  metrics:
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "accuracy"
+    - "specificity"
+    - "sensitivity"
+    - "auc_roc"
+    - "processing_time"
+    - "memory_usage"
+
+  # Test execution settings
+  execution:
+    parallel_jobs: 4
+    timeout_per_test: 60
+    retry_failed_tests: 3
+    generate_report: true
+
+  # Validation settings
+  validation:
+    ground_truth_format: "audacity_labels"
+    tolerance_ms: 50  # 50ms tolerance for segment boundaries
+    min_segment_duration_ms: 100
+
+# Benchmarking configuration
+benchmark:
+  enabled: true
+  iterations: 100
+  warmup_iterations: 10
+  measure_memory: true
+  measure_cpu: true
+
+  # Performance targets
+  targets:
+    max_latency_ms: 50
+    max_memory_mb: 100
+    min_throughput_files_per_second: 10
