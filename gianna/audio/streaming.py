@@ -22,8 +22,48 @@ import pyaudio
 
 from gianna.assistants.audio.stt.factory_method import speech_to_text
 from gianna.assistants.audio.tts.factory_method import text_to_speech
-from gianna.assistants.audio.vad import VoiceActivityDetector
 from gianna.assistants.models.factory_method import get_chain_instance
+
+# Import new VAD system with fallback to legacy
+try:
+    from gianna.audio.vad import BaseVAD, VADConfig, create_vad
+
+    _NEW_VAD_AVAILABLE = True
+except ImportError:
+    _NEW_VAD_AVAILABLE = False
+
+# Fallback to legacy VAD if new system is not available
+if not _NEW_VAD_AVAILABLE:
+    try:
+        from gianna.assistants.audio.vad import VoiceActivityDetector
+
+        _LEGACY_VAD_AVAILABLE = True
+    except ImportError:
+        _LEGACY_VAD_AVAILABLE = False
+
+        # Create a minimal VAD stub
+        class VoiceActivityDetector:
+            def __init__(self, **kwargs):
+                logger.warning("No VAD system available - using stub implementation")
+                self.threshold = kwargs.get("threshold", 0.02)
+
+            def process_stream(self, audio_chunk):
+                return {
+                    "is_speaking": False,
+                    "is_voice_active": False,
+                    "energy": 0.0,
+                    "threshold": self.threshold,
+                    "state_changed": False,
+                    "event_type": None,
+                    "timestamp": time.time(),
+                }
+
+            def set_threshold(self, threshold):
+                self.threshold = threshold
+
+            def set_min_silence_duration(self, duration):
+                pass
+
 
 logger = logging.getLogger(__name__)
 
@@ -110,9 +150,16 @@ class StreamingVoicePipeline:
         sample_rate: int = 16000,
         chunk_size: int = 1024,
         channels: int = 1,
-        # VAD parameters
+        # VAD parameters - unified interface
+        vad_algorithm: str = "energy",  # New parameter for VAD algorithm selection
         vad_threshold: float = 0.02,
         min_silence_duration: float = 1.0,
+        min_speech_duration: float = 0.1,  # New parameter
+        vad_config: Optional[
+            VADConfig
+        ] = None,  # New parameter for advanced configuration
+        # Legacy VAD parameters (for backward compatibility)
+        vad_instance: Optional = None,  # Allow passing custom VAD instance
         # Buffer parameters
         buffer_max_chunks: int = 1000,
         # TTS parameters
@@ -156,14 +203,17 @@ class StreamingVoicePipeline:
         self.channels = channels
         self.audio_format = pyaudio.paInt16
 
-        # Pipeline components
-        self.vad = VoiceActivityDetector(
-            threshold=vad_threshold,
+        # Pipeline components - Initialize VAD with new factory system
+        self.vad = self._create_vad_instance(
+            vad_algorithm=vad_algorithm,
+            vad_threshold=vad_threshold,
             min_silence_duration=min_silence_duration,
+            min_speech_duration=min_speech_duration,
+            vad_config=vad_config,
+            vad_instance=vad_instance,
             sample_rate=sample_rate,
             chunk_size=chunk_size,
-            speech_start_callback=self._on_speech_start,
-            speech_end_callback=self._on_speech_end,
+            **kwargs,
         )
 
         self.audio_buffer = AudioBuffer(max_size=buffer_max_chunks)
@@ -223,6 +273,152 @@ class StreamingVoicePipeline:
             f"StreamingVoicePipeline initialized with session {self.session_id}"
         )
 
+    def _create_vad_instance(
+        self,
+        vad_algorithm: str,
+        vad_threshold: float,
+        min_silence_duration: float,
+        min_speech_duration: float,
+        vad_config: Optional,
+        vad_instance: Optional,
+        sample_rate: int,
+        chunk_size: int,
+        **kwargs,
+    ):
+        """
+        Create VAD instance using new factory system with fallback to legacy.
+
+        Args:
+            vad_algorithm (str): VAD algorithm to use
+            vad_threshold (float): Detection threshold
+            min_silence_duration (float): Minimum silence duration
+            min_speech_duration (float): Minimum speech duration
+            vad_config: Advanced VAD configuration
+            vad_instance: Pre-configured VAD instance
+            sample_rate (int): Audio sample rate
+            chunk_size (int): Audio chunk size
+            **kwargs: Additional parameters
+
+        Returns:
+            VAD instance (new or legacy)
+        """
+        # If a custom VAD instance is provided, use it
+        if vad_instance is not None:
+            logger.info("Using provided VAD instance")
+            return vad_instance
+
+        # Try to use new VAD factory system
+        if _NEW_VAD_AVAILABLE:
+            try:
+                # Create VAD config
+                if vad_config is None:
+                    vad_config = VADConfig(
+                        threshold=vad_threshold,
+                        min_silence_duration=min_silence_duration,
+                        min_speech_duration=min_speech_duration,
+                        sample_rate=sample_rate,
+                        chunk_size=chunk_size,
+                    )
+
+                # Create VAD instance using factory
+                vad = create_vad(vad_algorithm, config=vad_config, **kwargs)
+
+                # Set up callbacks for the new VAD system
+                vad.set_speech_start_callback(lambda result: self._on_speech_start())
+                vad.set_speech_end_callback(lambda result: self._on_speech_end())
+
+                logger.info(f"Created {vad_algorithm} VAD using new factory system")
+                return vad
+
+            except Exception as e:
+                logger.warning(f"Failed to create new VAD system: {e}")
+                logger.info("Falling back to legacy VAD system")
+
+        # Fallback to legacy VAD system
+        if _LEGACY_VAD_AVAILABLE or hasattr(self, "VoiceActivityDetector"):
+            logger.info("Using legacy VAD system")
+            return VoiceActivityDetector(
+                threshold=vad_threshold,
+                min_silence_duration=min_silence_duration,
+                sample_rate=sample_rate,
+                chunk_size=chunk_size,
+                speech_start_callback=self._on_speech_start,
+                speech_end_callback=self._on_speech_end,
+            )
+        else:
+            # Use stub implementation
+            logger.warning("No VAD system available - using minimal stub")
+            return VoiceActivityDetector(
+                threshold=vad_threshold,
+                min_silence_duration=min_silence_duration,
+                sample_rate=sample_rate,
+                chunk_size=chunk_size,
+            )
+
+    def _process_vad_chunk(self, audio_chunk):
+        """
+        Process audio chunk with VAD, handling both new and legacy interfaces.
+
+        Args:
+            audio_chunk: Audio data to process
+
+        Returns:
+            Dictionary with VAD results in a normalized format
+        """
+        try:
+            # Check if we're using the new VAD system
+            if _NEW_VAD_AVAILABLE and isinstance(self.vad, BaseVAD):
+                # New VAD system - returns VADResult object
+                result = self.vad.process_stream(audio_chunk)
+
+                # Convert to dictionary format for compatibility
+                return {
+                    "is_speaking": result.is_speaking,
+                    "is_voice_active": result.is_voice_active,
+                    "energy": result.energy_level,
+                    "threshold": result.threshold_used,
+                    "confidence": result.confidence,
+                    "state_changed": result.state_changed,
+                    "event_type": (
+                        result.event_type.value if result.event_type else None
+                    ),
+                    "timestamp": result.timestamp,
+                    "processing_time": result.processing_time,
+                }
+            else:
+                # Legacy VAD system - returns dictionary
+                result = self.vad.process_stream(audio_chunk)
+
+                # Ensure all expected keys are present
+                normalized_result = {
+                    "is_speaking": result.get("is_speaking", False),
+                    "is_voice_active": result.get("is_voice_active", False),
+                    "energy": result.get("energy", 0.0),
+                    "threshold": result.get("threshold", 0.02),
+                    "confidence": result.get("confidence", 0.0),
+                    "state_changed": result.get("state_changed", False),
+                    "event_type": result.get("event_type"),
+                    "timestamp": result.get("timestamp", time.time()),
+                    "processing_time": result.get("processing_time", 0.0),
+                }
+
+                return normalized_result
+
+        except Exception as e:
+            logger.error(f"Error processing VAD chunk: {e}")
+            # Return safe defaults
+            return {
+                "is_speaking": False,
+                "is_voice_active": False,
+                "energy": 0.0,
+                "threshold": 0.02,
+                "confidence": 0.0,
+                "state_changed": False,
+                "event_type": None,
+                "timestamp": time.time(),
+                "processing_time": 0.0,
+            }
+
     def _set_state(self, new_state: PipelineState) -> None:
         """Thread-safe state update."""
         with self.state_lock:
@@ -278,13 +474,15 @@ class StreamingVoicePipeline:
             # Convert to numpy array
             audio_chunk = np.frombuffer(in_data, dtype=np.int16)
 
-            # Process with VAD
-            vad_result = self.vad.process_stream(audio_chunk)
+            # Process with VAD (handle both new and legacy interfaces)
+            vad_result = self._process_vad_chunk(audio_chunk)
             self.stats["chunks_processed"] += 1
             self.stats["last_activity_time"] = time.time()
 
             # Add to buffer if we're in a speech segment
-            if vad_result["is_speaking"] or vad_result["is_voice_active"]:
+            if vad_result.get("is_speaking", False) or vad_result.get(
+                "is_voice_active", False
+            ):
                 self.audio_buffer.add_chunk(audio_chunk)
 
         except Exception as e:
@@ -549,21 +747,93 @@ class StreamingVoicePipeline:
         threshold: Optional[float] = None,
         min_silence_duration: Optional[float] = None,
     ) -> None:
-        """Update VAD settings during runtime."""
-        if threshold is not None:
-            self.vad.set_threshold(threshold)
+        """Update VAD settings during runtime, handling both new and legacy VAD systems."""
+        try:
+            # Handle new VAD system
+            if _NEW_VAD_AVAILABLE and isinstance(self.vad, BaseVAD):
+                if threshold is not None:
+                    self.vad.set_threshold(threshold)
 
-        if min_silence_duration is not None:
-            self.vad.set_min_silence_duration(min_silence_duration)
+                # For new VAD system, config updates might be different
+                if min_silence_duration is not None:
+                    # Update configuration
+                    new_config = VADConfig(
+                        threshold=(
+                            threshold
+                            if threshold is not None
+                            else self.vad.config.threshold
+                        ),
+                        min_silence_duration=min_silence_duration,
+                        min_speech_duration=self.vad.config.min_speech_duration,
+                        sample_rate=self.vad.config.sample_rate,
+                        chunk_size=self.vad.config.chunk_size,
+                        channels=self.vad.config.channels,
+                        algorithm_params=self.vad.config.algorithm_params,
+                        enable_callbacks=self.vad.config.enable_callbacks,
+                        callback_timeout=self.vad.config.callback_timeout,
+                        buffer_size=self.vad.config.buffer_size,
+                        max_history_length=self.vad.config.max_history_length,
+                    )
+                    self.vad.update_config(new_config)
 
-        logger.info(
-            f"VAD settings updated: threshold={self.vad.threshold}, "
-            f"min_silence={self.vad.min_silence_duration}s"
-        )
+                logger.info(
+                    f"VAD settings updated: threshold={self.vad.config.threshold}, "
+                    f"min_silence={self.vad.config.min_silence_duration}s"
+                )
+            else:
+                # Handle legacy VAD system
+                if threshold is not None:
+                    self.vad.set_threshold(threshold)
+
+                if min_silence_duration is not None:
+                    self.vad.set_min_silence_duration(min_silence_duration)
+
+                # Get current settings based on available attributes
+                current_threshold = getattr(self.vad, "threshold", threshold or 0.02)
+                current_min_silence = getattr(
+                    self.vad, "min_silence_duration", min_silence_duration or 1.0
+                )
+
+                logger.info(
+                    f"VAD settings updated: threshold={current_threshold}, "
+                    f"min_silence={current_min_silence}s"
+                )
+
+        except Exception as e:
+            logger.error(f"Failed to update VAD settings: {e}")
+            # Continue operation with current settings
 
     def get_pipeline_status(self) -> Dict[str, Any]:
-        """Get current pipeline status and statistics."""
-        vad_stats = self.vad.get_statistics()
+        """Get current pipeline status and statistics, handling both VAD systems."""
+        try:
+            # Get VAD statistics based on system type
+            if _NEW_VAD_AVAILABLE and isinstance(self.vad, BaseVAD):
+                vad_stats = self.vad.statistics.to_dict()
+                vad_info = {
+                    "algorithm": self.vad.algorithm.algorithm_id,
+                    "is_initialized": self.vad.is_initialized,
+                    "is_listening": self.vad.is_listening,
+                    "current_state": self.vad.state.value,
+                }
+            else:
+                # Legacy VAD system
+                vad_stats = (
+                    self.vad.get_statistics()
+                    if hasattr(self.vad, "get_statistics")
+                    else {}
+                )
+                vad_info = {
+                    "algorithm": "legacy",
+                    "threshold": getattr(self.vad, "threshold", 0.02),
+                    "min_silence_duration": getattr(
+                        self.vad, "min_silence_duration", 1.0
+                    ),
+                }
+
+        except Exception as e:
+            logger.error(f"Error getting VAD statistics: {e}")
+            vad_stats = {}
+            vad_info = {"error": str(e)}
 
         return {
             "session_id": self.session_id,
@@ -571,6 +841,7 @@ class StreamingVoicePipeline:
             "is_running": self._running,
             "stats": self.stats.copy(),
             "vad_stats": vad_stats,
+            "vad_info": vad_info,
             "buffer_size": self.audio_buffer.size,
             "buffer_samples": self.audio_buffer.total_samples,
             "speech_queue_size": self.speech_queue.qsize(),
@@ -628,21 +899,94 @@ class StreamingVoicePipeline:
 async def create_voice_assistant(
     model_name: str = "gpt35",
     system_prompt: str = "You are a helpful voice assistant.",
+    vad_algorithm: str = "energy",
+    vad_preset: str = "balanced",
     **kwargs,
 ) -> StreamingVoicePipeline:
     """
-    Create and configure a voice assistant pipeline.
+    Create and configure a voice assistant pipeline with advanced VAD support.
 
     Args:
         model_name (str): LLM model to use
         system_prompt (str): System prompt for the assistant
+        vad_algorithm (str): VAD algorithm to use ("energy", "spectral", "webrtc", "silero", "adaptive")
+        vad_preset (str): VAD configuration preset ("fast", "balanced", "accurate")
         **kwargs: Additional configuration options
 
     Returns:
         StreamingVoicePipeline: Configured pipeline instance
+
+    Example:
+        # Create with default energy VAD
+        pipeline = await create_voice_assistant()
+
+        # Create with advanced VAD algorithm
+        pipeline = await create_voice_assistant(
+            vad_algorithm="webrtc",
+            vad_preset="accurate"
+        )
+
+        # Create with custom VAD configuration
+        from gianna.audio.vad import create_vad_config
+        vad_config = create_vad_config("energy", preset="fast", threshold=0.03)
+        pipeline = await create_voice_assistant(vad_config=vad_config)
     """
+    # Create VAD configuration if using new system
+    if _NEW_VAD_AVAILABLE and "vad_config" not in kwargs:
+        try:
+            from gianna.audio.vad import create_vad_config
+
+            vad_config = create_vad_config(vad_algorithm, preset=vad_preset)
+            kwargs["vad_config"] = vad_config
+        except Exception as e:
+            logger.warning(f"Failed to create VAD config, using defaults: {e}")
+
+    # Set VAD algorithm if not already specified
+    if "vad_algorithm" not in kwargs:
+        kwargs["vad_algorithm"] = vad_algorithm
+
     return StreamingVoicePipeline(
         model_name=model_name, system_prompt=system_prompt, **kwargs
+    )
+
+
+async def create_streaming_voice_assistant(
+    model_name: str = "gpt35",
+    system_prompt: str = "You are a helpful voice assistant.",
+    vad_algorithm: str = "energy",
+    sample_rate: int = 16000,
+    chunk_size: int = 1024,
+    **kwargs,
+) -> StreamingVoicePipeline:
+    """
+    Create a voice assistant optimized for streaming applications.
+
+    Args:
+        model_name (str): LLM model to use
+        system_prompt (str): System prompt for the assistant
+        vad_algorithm (str): VAD algorithm optimized for streaming
+        sample_rate (int): Audio sample rate
+        chunk_size (int): Audio chunk size for processing
+        **kwargs: Additional configuration options
+
+    Returns:
+        StreamingVoicePipeline: Configured streaming pipeline instance
+    """
+    # Streaming-optimized configuration
+    streaming_config = {
+        "sample_rate": sample_rate,
+        "chunk_size": chunk_size,
+        "vad_algorithm": vad_algorithm,
+        "min_silence_duration": 0.5,  # Shorter silence for faster response
+        "min_speech_duration": 0.1,  # Shorter minimum speech duration
+        "buffer_max_chunks": chunk_size * 8,  # Larger buffer for streaming
+    }
+
+    # Apply streaming optimizations and user overrides
+    streaming_config.update(kwargs)
+
+    return StreamingVoicePipeline(
+        model_name=model_name, system_prompt=system_prompt, **streaming_config
     )
 
 

@@ -1,0 +1,75 @@
+# Development VAD Configuration
+# Configuration optimized for development and testing
+
+# Inherit from base configuration
+extends: "base.yaml"
+
+vad:
+  log_level: "DEBUG"
+  default_algorithm: "webrtc"
+
+  preprocessing:
+    normalize_audio: true
+    noise_reduction: true  # Enable for better testing
+    high_pass_filter: true
+    low_pass_filter: false
+
+  performance:
+    batch_processing: false
+    max_concurrent_streams: 2
+    memory_limit_mb: 1024  # More memory for development
+
+  output:
+    save_segments: true  # Save for debugging
+    save_metrics: true
+    export_format: "json"
+    output_directory: "./vad_output/dev"
+
+  monitoring:
+    enable_metrics: true
+    log_decisions: true  # Detailed logging for development
+    performance_tracking: true
+
+# Enhanced algorithm settings for development
+algorithms:
+  webrtc:
+    aggressiveness: 2  # More sensitive for development
+    frame_duration_ms: 20
+    sample_rate: 16000
+
+  energy_based:
+    threshold: 0.005  # Lower threshold for testing
+    frame_length: 1024
+    hop_length: 256
+
+  # Machine learning algorithms for development
+  ml_vad:
+    model_path: "./models/vad_model.pth"
+    confidence_threshold: 0.7
+    batch_size: 32
+
+  ensemble:
+    algorithms: ["webrtc", "energy_based"]
+    voting_strategy: "majority"
+    confidence_weighting: true
+
+# Development-specific audio settings
+audio:
+  supported_formats: ["wav", "mp3", "flac", "m4a", "ogg", "aac"]
+  default_sample_rate: 22050  # Higher quality for development
+  default_channels: 1
+  buffer_size: 2048
+
+# Testing and validation
+testing:
+  enabled: true
+  ground_truth_path: "./test_data/ground_truth"
+  test_datasets: ["librispeech", "voxceleb", "custom"]
+  metrics: ["precision", "recall", "f1_score", "accuracy"]
+
+# Development tools
+dev_tools:
+  visualization: true
+  real_time_plotting: true
+  audio_preview: true
+  debug_console: true

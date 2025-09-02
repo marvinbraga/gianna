@@ -54,10 +54,27 @@ psutil = "^6.1.0"
 redis = {version = "^5.2.0", optional = true}
 matplotlib = {version = "^3.9.0", optional = true}
 numpy = {version = "^2.2.0", optional = true}
+# VAD Dependencies - Optional
+torch = {version = "^2.0.0", optional = true}
+torchaudio = {version = "^2.0.0", optional = true}
+webrtcvad = {version = "^2.0.10", optional = true}
+scipy = {version = "^1.11.0", optional = true}
+scikit-learn = {version = "^1.3.0", optional = true}
+seaborn = {version = "^0.12.0", optional = true}
+librosa = {version = "^0.10.0", optional = true}
+soundfile = {version = "^0.12.0", optional = true}
+noisereduce = {version = "^3.0.0", optional = true}
 
 [tool.poetry.extras]
 optimization = ["redis", "matplotlib", "numpy"]
-full = ["redis", "matplotlib", "numpy"]
+# VAD Extras - Different complexity levels
+vad-basic = ["webrtcvad", "scipy", "numpy", "soundfile"]
+vad-advanced = ["webrtcvad", "scipy", "numpy", "soundfile", "librosa", "scikit-learn", "matplotlib", "seaborn"]
+vad-ml = ["torch", "torchaudio", "scipy", "numpy", "soundfile", "librosa", "scikit-learn", "matplotlib", "seaborn"]
+vad-full = ["torch", "torchaudio", "webrtcvad", "scipy", "numpy", "soundfile", "librosa", "scikit-learn", "matplotlib", "seaborn", "noisereduce"]
+# Combined extras
+full = ["redis", "matplotlib", "numpy", "torch", "torchaudio", "webrtcvad", "scipy", "scikit-learn", "seaborn", "librosa", "soundfile", "noisereduce"]
+analytics = ["matplotlib", "numpy", "scipy", "seaborn", "scikit-learn"]
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.1.1"

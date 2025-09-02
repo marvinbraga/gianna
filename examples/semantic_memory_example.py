@@ -6,8 +6,14 @@ and retrieve conversation interactions with semantic similarity search.
 """
 
 import asyncio
+import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict
+
+# Add project root to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 from gianna.memory import MemoryConfig, SemanticMemory
 from gianna.memory.embeddings import EmbeddingProvider

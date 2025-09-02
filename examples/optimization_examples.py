@@ -7,8 +7,13 @@ para melhorar a performance da aplicação Gianna.
 
 import asyncio
 import os
+import sys
 import time
 from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 # Imports da aplicação Gianna
 from gianna.assistants.models.factory_method import get_chain_instance
