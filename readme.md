@@ -1,7 +1,7 @@
 # Gianna - Assistente de Voz Inteligente
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Poetry](https://img.shields.io/badge/dependency%20management-poetry-blue)](https://python-poetry.org/)
+[![uv](https://img.shields.io/badge/dependency%20management-uv-blue)](https://github.com/astral-sh/uv)
 [![LangGraph](https://img.shields.io/badge/workflow-langgraph-green)](https://langchain-ai.github.io/langgraph/)
 [![Status](https://img.shields.io/badge/status-production%20ready-brightgreen)](https://github.com/user/gianna)
 
@@ -51,7 +51,7 @@ git clone <repository-url>
 cd gianna
 
 # Instalar dependências
-poetry install
+uv sync
 
 # Configurar ambiente
 cp .env.example .env
@@ -274,23 +274,22 @@ LOG_LEVEL=INFO
 ### Setup do Ambiente
 
 ```bash
-# Instalar Poetry
-curl -sSL https://install.python-poetry.org | python3 -
+# Instalar uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Configurar ambiente de desenvolvimento
-poetry install --with dev
-poetry shell
+uv sync --extra dev --extra test
 
 # Configurar pre-commit
-pre-commit install
+uv run pre-commit install
 
 # Executar testes
-poetry run pytest
+uv run pytest
 
 # Linting e formatação
-poetry run black .
-poetry run flake8
-poetry run mypy gianna/
+uv run black .
+uv run flake8
+uv run mypy gianna/
 ```
 
 ### Estrutura do Projeto

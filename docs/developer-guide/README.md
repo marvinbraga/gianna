@@ -114,14 +114,13 @@ git clone <repository-url>
 cd gianna
 
 # Ambiente Python
-poetry install
-poetry shell
+uv sync --extra dev --extra test
 
 # Configuração desenvolvimento
 invoke dev-setup
 
 # Pre-commit hooks
-pre-commit install
+uv run pre-commit install
 ```
 
 ### Configuração do Editor
@@ -549,18 +548,23 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     portaudio19-dev \
     ffmpeg \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Instalar uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:${PATH}"
+
 # Dependências Python
-COPY pyproject.toml poetry.lock ./
-RUN pip install poetry && poetry install --no-dev
+COPY pyproject.toml uv.lock ./
+RUN uv sync --no-dev
 
 # Código da aplicação
 COPY . .
 
 EXPOSE 8000
 
-CMD ["python", "main.py"]
+CMD ["uv", "run", "python", "main.py"]
 ```
 
 ```yaml
