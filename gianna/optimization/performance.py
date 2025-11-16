@@ -511,8 +511,10 @@ class PerformanceOptimizer:
         ):
             try:
                 self.cache_manager.redis_client.close()
-            except:
-                pass
+            except (ConnectionError, AttributeError, OSError) as e:
+                logger.debug(f"Erro ao fechar conexão Redis durante cleanup: {e}")
+            except Exception as e:
+                logger.warning(f"Erro inesperado ao fechar Redis: {e}", exc_info=True)
 
         logger.info("Recursos de performance limpos")
 

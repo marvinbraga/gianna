@@ -102,7 +102,11 @@ class MemoryCache:
             # Calculate size
             try:
                 size = len(pickle.dumps(value))
-            except:
+            except (pickle.PicklingError, TypeError, AttributeError) as e:
+                logger.debug(f"Não foi possível serializar valor para calcular tamanho: {e}")
+                size = 1024  # Default size if can't serialize
+            except Exception as e:
+                logger.warning(f"Erro inesperado ao calcular tamanho do cache: {e}")
                 size = 1024  # Default size if can't serialize
 
             # Check if value is too large

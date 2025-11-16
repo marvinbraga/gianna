@@ -510,7 +510,11 @@ class AdaptationEngine:
                 importance_scores[feature_name] = (
                     abs(correlation) if not np.isnan(correlation) else 0.0
                 )
-            except:
+            except (ValueError, IndexError, np.linalg.LinAlgError) as e:
+                logger.debug(f"Não foi possível calcular correlação para {feature_name}: {e}")
+                importance_scores[feature_name] = 0.0
+            except Exception as e:
+                logger.warning(f"Erro inesperado ao calcular correlação para {feature_name}: {e}")
                 importance_scores[feature_name] = 0.0
 
         return importance_scores
@@ -551,7 +555,11 @@ class AdaptationEngine:
         for feature_name, extractor in self.feature_extractors.items():
             try:
                 features[feature_name] = extractor(context)
-            except:
+            except (KeyError, AttributeError, TypeError, ValueError) as e:
+                logger.debug(f"Falha ao extrair feature '{feature_name}': {e}")
+                features[feature_name] = 0.0
+            except Exception as e:
+                logger.warning(f"Erro inesperado ao extrair feature '{feature_name}': {e}")
                 features[feature_name] = 0.0
 
         # Predict user satisfaction for current response

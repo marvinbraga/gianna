@@ -34,35 +34,53 @@ from gianna.core.state_manager import StateManager
 # ============================================================================
 
 
+@pytest.fixture(scope="session")
+def monkeypatch_session():
+    """Session-scoped monkeypatch fixture for environment setup."""
+    from _pytest.monkeypatch import MonkeyPatch
+    m = MonkeyPatch()
+    yield m
+    m.undo()
+
+
 @pytest.fixture(scope="session", autouse=True)
-def test_environment():
-    """Setup test environment variables and configuration."""
+def test_environment(monkeypatch_session):
+    """Setup test environment variables and configuration.
+
+    Environment variables can be set in a .env.test file or exported before running tests.
+    If not set, safe placeholder values will be used.
+    """
     # Set test environment variables
     os.environ["TESTING"] = "true"
     os.environ["LOG_LEVEL"] = "DEBUG"
 
-    # Mock API keys for testing
+    # Load .env.test file if it exists
+    from pathlib import Path
+    env_test_file = Path(__file__).parent.parent / ".env.test"
+    if env_test_file.exists():
+        from dotenv import load_dotenv
+        load_dotenv(env_test_file)
+
+    # Define required API keys with safe placeholder values
+    # These will only be used if not already set in environment
     test_api_keys = {
-        "OPENAI_API_KEY": "test-openai-key",
-        "GOOGLE_API_KEY": "test-google-key",
-        "ELEVEN_LABS_API_KEY": "test-elevenlabs-key",
-        "GROQ_API_KEY": "test-groq-key",
-        "NVIDIA_API_KEY": "test-nvidia-key",
-        "COHERE_API_KEY": "test-cohere-key",
-        "XAI_API_KEY": "test-xai-key",
-        "ANTHROPIC_API_KEY": "test-anthropic-key",
+        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", "test-openai-key-placeholder"),
+        "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY", "test-google-key-placeholder"),
+        "ELEVEN_LABS_API_KEY": os.getenv("ELEVEN_LABS_API_KEY", "test-elevenlabs-key-placeholder"),
+        "GROQ_API_KEY": os.getenv("GROQ_API_KEY", "test-groq-key-placeholder"),
+        "NVIDIA_API_KEY": os.getenv("NVIDIA_API_KEY", "test-nvidia-key-placeholder"),
+        "COHERE_API_KEY": os.getenv("COHERE_API_KEY", "test-cohere-key-placeholder"),
+        "XAI_API_KEY": os.getenv("XAI_API_KEY", "test-xai-key-placeholder"),
+        "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY", "test-anthropic-key-placeholder"),
     }
 
+    # Set environment variables using monkeypatch for clean test isolation
     for key, value in test_api_keys.items():
-        if key not in os.environ:
-            os.environ[key] = value
+        monkeypatch_session.setenv(key, value)
 
     yield
 
-    # Cleanup
-    for key in test_api_keys:
-        if os.environ.get(key) == test_api_keys[key]:
-            del os.environ[key]
+    # Cleanup handled automatically by monkeypatch
 
 
 # ============================================================================

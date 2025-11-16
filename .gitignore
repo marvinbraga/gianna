@@ -1,3 +1,27 @@
+# ============================================================================
+# SECURITY & SECRETS
+# ============================================================================
+# Encryption keys and salts
+.salt
+.salt.bak
+*.pem
+*.key
+
+# Secrets and credentials
+secrets.enc
+secrets.yaml
+secrets.json
+credentials.json
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.test.example
+
+# ============================================================================
+# PYTHON
+# ============================================================================
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -120,8 +144,7 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Environments
-.env
+# Python virtual environments
 .venv
 env/
 venv/
