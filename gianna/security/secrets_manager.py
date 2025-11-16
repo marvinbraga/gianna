@@ -65,7 +65,10 @@ class SecretsManager:
                 algorithm=hashes.SHA256(),
                 length=32,
                 salt=salt,
-                iterations=100000,
+                # OWASP 2024 recommendation: 480,000 iterations for PBKDF2-HMAC-SHA256
+                # This provides strong protection against brute-force attacks
+                # Reference: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+                iterations=480000,
             )
             key = base64.urlsafe_b64encode(kdf.derive(key_bytes))
             self._cipher_suite = Fernet(key)
