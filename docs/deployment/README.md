@@ -75,15 +75,15 @@ source venv/bin/activate  # Linux/macOS
 venv\Scripts\activate     # Windows
 
 # Dependências
-pip install poetry
-poetry install
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv sync
 
 # Configuração
 cp .env.example .env.development
 # Edite .env.development com suas configurações
 
 # Inicialização
-python main.py
+uv run python main.py
 ```
 
 ### Executando com Hot Reload
@@ -111,10 +111,9 @@ sudo su - gianna
 # 3. Configurar aplicação
 git clone <repository-url>
 cd gianna
-python3 -m venv venv
-source venv/bin/activate
-pip install poetry
-poetry install --no-dev
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.cargo/bin:$PATH"
+uv sync --no-dev
 
 # 4. Configurar ambiente
 cp .env.example .env.production
@@ -209,8 +208,6 @@ LABEL description="Gianna Voice Assistant"
 # Variáveis de ambiente
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
-ENV POETRY_NO_INTERACTION=1
-ENV POETRY_VENV_IN_PROJECT=1
 
 # Dependências do sistema
 RUN apt-get update && apt-get install -y \
@@ -219,14 +216,18 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Instalar uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:${PATH}"
+
 # Usuário não-root
 RUN useradd --create-home --shell /bin/bash app
 USER app
 WORKDIR /home/app
 
 # Dependências Python
-COPY --chown=app:app pyproject.toml poetry.lock ./
-RUN pip install poetry && poetry install --no-dev
+COPY --chown=app:app pyproject.toml uv.lock ./
+RUN uv sync --no-dev
 
 # Código da aplicação
 COPY --chown=app:app . .
@@ -242,7 +243,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 EXPOSE 8000
 
 # Comando padrão
-CMD ["python", "main.py"]
+CMD ["uv", "run", "python", "main.py"]
 ```
 
 ### Docker Compose Completo
@@ -688,8 +689,7 @@ git checkout main
 git pull origin main
 
 echo "📦 Atualizando dependências..."
-source venv/bin/activate
-poetry install --no-dev
+uv sync --no-dev
 
 echo "✅ Executando testes..."
 python -m pytest tests/ --timeout=30

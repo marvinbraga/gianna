@@ -24,7 +24,7 @@ Bem-vindo ao Gianna, seu assistente de voz inteligente! Este guia irá te ensina
 2. **Configure o ambiente:**
    ```bash
    # Instalar dependências
-   poetry install
+   uv sync
 
    # Configurar variáveis de ambiente
    cp .env.example .env

@@ -50,13 +50,13 @@ def format_code(ctx):
     print("  📝 Running Black...")
     for python_dir in PYTHON_DIRS:
         if Path(python_dir).exists():
-            ctx.run(f"poetry run black {python_dir}")
+            ctx.run(f"uv run black {python_dir}")
 
     # Sort imports with isort
     print("  📦 Running isort...")
     for python_dir in PYTHON_DIRS:
         if Path(python_dir).exists():
-            ctx.run(f"poetry run isort {python_dir}")
+            ctx.run(f"uv run isort {python_dir}")
 
     print("✅ Code formatting completed!")
 
@@ -68,7 +68,7 @@ def lint_flake8(ctx):
     for python_dir in PYTHON_DIRS:
         if Path(python_dir).exists():
             print(f"  📁 Linting {python_dir}/")
-            ctx.run(f"poetry run flake8 {python_dir}")
+            ctx.run(f"uv run flake8 {python_dir}")
 
 
 @task
@@ -78,7 +78,7 @@ def type_check(ctx):
     for python_dir in PYTHON_DIRS:
         if Path(python_dir).exists():
             print(f"  📁 Type checking {python_dir}/")
-            ctx.run(f"poetry run mypy {python_dir}")
+            ctx.run(f"uv run mypy {python_dir}")
 
 
 @task(pre=[format_code])
@@ -131,14 +131,14 @@ def lint_strict(ctx):
 def pre_commit_run(ctx):
     """Run pre-commit hooks on all files."""
     print("🔗 Running pre-commit hooks...")
-    ctx.run("poetry run pre-commit run --all-files")
+    ctx.run("uv run pre-commit run --all-files")
 
 
 @task
 def pre_commit_update(ctx):
     """Update pre-commit hooks."""
     print("⬆️ Updating pre-commit hooks...")
-    ctx.run("poetry run pre-commit autoupdate")
+    ctx.run("uv run pre-commit autoupdate")
 
 
 @task
@@ -146,7 +146,7 @@ def test(ctx):
     """Run tests (if test framework is set up)."""
     print("🧪 Running tests...")
     # Add test command here when tests are set up
-    # ctx.run("poetry run pytest")
+    # ctx.run("uv run pytest")
     print("⚠️  No tests configured yet")
 
 
@@ -156,10 +156,10 @@ def install(ctx):
     print("📦 Installing dependencies and setting up dev environment...")
 
     # Install dependencies
-    ctx.run("poetry install")
+    ctx.run("uv sync --all-extras")
 
     # Install pre-commit hooks
-    ctx.run("poetry run pre-commit install")
+    ctx.run("uv run pre-commit install")
 
     print("✅ Development environment setup completed!")
 
@@ -168,7 +168,7 @@ def install(ctx):
 def build(ctx):
     """Build the project."""
     print("🏗️  Building project...")
-    ctx.run("poetry build")
+    ctx.run("uv build")
     print("✅ Build completed!")
 
 
@@ -176,7 +176,7 @@ def build(ctx):
 def check_deps(ctx):
     """Check for dependency updates."""
     print("🔍 Checking for dependency updates...")
-    ctx.run("poetry show --outdated")
+    ctx.run("uv pip list --outdated")
 
 
 @task(pre=[clean, lint])
@@ -274,7 +274,7 @@ Example usage:
 def vad_install_basic(ctx):
     """Install basic VAD dependencies."""
     print("📦 Installing basic VAD dependencies...")
-    ctx.run("poetry install --extras vad-basic")
+    ctx.run("uv sync --extra vad-basic")
     print("✅ Basic VAD dependencies installed!")
 
 
@@ -282,7 +282,7 @@ def vad_install_basic(ctx):
 def vad_install_advanced(ctx):
     """Install advanced VAD dependencies (includes visualization)."""
     print("📦 Installing advanced VAD dependencies...")
-    ctx.run("poetry install --extras vad-advanced")
+    ctx.run("uv sync --extra vad-advanced")
     print("✅ Advanced VAD dependencies installed!")
 
 
@@ -290,7 +290,7 @@ def vad_install_advanced(ctx):
 def vad_install_ml(ctx):
     """Install machine learning VAD dependencies (PyTorch-based)."""
     print("📦 Installing ML VAD dependencies...")
-    ctx.run("poetry install --extras vad-ml")
+    ctx.run("uv sync --extra vad-ml")
     print("✅ ML VAD dependencies installed!")
 
 
@@ -298,7 +298,7 @@ def vad_install_ml(ctx):
 def vad_install_full(ctx):
     """Install all VAD dependencies."""
     print("📦 Installing all VAD dependencies...")
-    ctx.run("poetry install --extras vad-full")
+    ctx.run("uv sync --extra vad-full")
     print("✅ All VAD dependencies installed!")
 
 
@@ -431,7 +431,7 @@ except Exception as e:
         f.write(test_script)
 
     try:
-        ctx.run(f"poetry run python {test_file}")
+        ctx.run(f"uv run python {test_file}")
     finally:
         # Cleanup
         if test_file.exists():
@@ -502,7 +502,7 @@ if __name__ == "__main__":
         f.write(benchmark_script)
 
     try:
-        ctx.run(f"poetry run python {benchmark_file}")
+        ctx.run(f"uv run python {benchmark_file}")
     finally:
         # Cleanup
         if benchmark_file.exists():

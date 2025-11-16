@@ -70,9 +70,8 @@ This documentation provides complete coverage of the Gianna framework, from basi
 git clone https://github.com/your-username/gianna.git
 cd gianna
 
-# Install with Poetry
-poetry install
-poetry shell
+# Install with uv
+uv sync
 
 # Configure environment
 cp .env.example .env
