@@ -344,7 +344,279 @@ class VADStatistics:
             }
 
 
-# Type aliases for common use cases
+# =============================================================================
+# Type Aliases and Protocols for Callbacks
+# =============================================================================
+
+# Basic type aliases for audio data
 AudioChunk = Union[np.ndarray, bytes]
+AudioBuffer = Union[np.ndarray, bytes, bytearray]
+
+# Generic VAD callback types
 VADCallback = Callable[[VADResult], None]
 EventCallback = Callable[[VADEventType, Dict[str, Any]], None]
+
+
+# Protocol definitions for type-safe callbacks
+try:
+    from typing import Protocol, runtime_checkable
+
+    @runtime_checkable
+    class VADCallbackProtocol(Protocol):
+        """
+        Protocol for VAD event callbacks.
+
+        Implementations must accept a VADResult and return None.
+        This protocol is runtime-checkable for validation.
+
+        Example:
+            >>> def my_callback(result: VADResult) -> None:
+            ...     print(f"Voice active: {result.is_voice_active}")
+            >>> assert isinstance(my_callback, VADCallbackProtocol)
+        """
+
+        def __call__(self, result: VADResult) -> None:
+            """
+            Process a VAD result.
+
+            Args:
+                result: VAD detection result containing audio analysis data
+            """
+            ...
+
+    @runtime_checkable
+    class SpeechStartCallbackProtocol(Protocol):
+        """
+        Protocol for speech start event callbacks.
+
+        Called when speech activity is first detected after silence.
+
+        Example:
+            >>> def on_speech_start(result: VADResult) -> None:
+            ...     print(f"Speech started at {result.timestamp}")
+        """
+
+        def __call__(self, result: VADResult) -> None:
+            """
+            Handle speech start event.
+
+            Args:
+                result: VAD result at the moment speech was detected
+            """
+            ...
+
+    @runtime_checkable
+    class SpeechEndCallbackProtocol(Protocol):
+        """
+        Protocol for speech end event callbacks.
+
+        Called when speech activity ends and silence is detected.
+
+        Example:
+            >>> def on_speech_end(result: VADResult) -> None:
+            ...     print(f"Speech ended, duration: {result.speech_duration}s")
+        """
+
+        def __call__(self, result: VADResult) -> None:
+            """
+            Handle speech end event.
+
+            Args:
+                result: VAD result at the moment speech ended
+            """
+            ...
+
+    @runtime_checkable
+    class ActivityCallbackProtocol(Protocol):
+        """
+        Protocol for continuous activity monitoring callbacks.
+
+        Called for every processed audio chunk with current state.
+
+        Example:
+            >>> def on_activity(result: VADResult) -> None:
+            ...     if result.is_voice_active:
+            ...         print(f"Voice activity: {result.confidence:.2%}")
+        """
+
+        def __call__(self, result: VADResult) -> None:
+            """
+            Handle activity update.
+
+            Args:
+                result: VAD result for the current audio chunk
+            """
+            ...
+
+    @runtime_checkable
+    class EventCallbackProtocol(Protocol):
+        """
+        Protocol for generic VAD event callbacks.
+
+        Called when any VAD event occurs with event type and context.
+
+        Example:
+            >>> def on_event(event_type: VADEventType, context: Dict[str, Any]) -> None:
+            ...     print(f"Event: {event_type.value}, context: {context}")
+        """
+
+        def __call__(self, event_type: VADEventType, context: Dict[str, Any]) -> None:
+            """
+            Handle a VAD event.
+
+            Args:
+                event_type: Type of event that occurred
+                context: Additional context data for the event
+            """
+            ...
+
+    @runtime_checkable
+    class ErrorCallbackProtocol(Protocol):
+        """
+        Protocol for error handling callbacks.
+
+        Called when errors occur during VAD processing.
+
+        Example:
+            >>> def on_error(error: Exception, context: Dict[str, Any]) -> None:
+            ...     logger.error(f"VAD error: {error}, context: {context}")
+        """
+
+        def __call__(self, error: Exception, context: Dict[str, Any]) -> None:
+            """
+            Handle a VAD processing error.
+
+            Args:
+                error: The exception that occurred
+                context: Additional context about where/when the error occurred
+            """
+            ...
+
+    @runtime_checkable
+    class ThresholdChangeCallbackProtocol(Protocol):
+        """
+        Protocol for threshold change event callbacks.
+
+        Called when the VAD threshold is automatically adjusted.
+
+        Example:
+            >>> def on_threshold_change(old_threshold: float, new_threshold: float,
+            ...                         reason: str) -> None:
+            ...     print(f"Threshold changed: {old_threshold} -> {new_threshold}")
+        """
+
+        def __call__(
+            self, old_threshold: float, new_threshold: float, reason: str
+        ) -> None:
+            """
+            Handle threshold change event.
+
+            Args:
+                old_threshold: Previous threshold value
+                new_threshold: New threshold value
+                reason: Reason for the change
+            """
+            ...
+
+    @runtime_checkable
+    class AudioProcessorCallbackProtocol(Protocol):
+        """
+        Protocol for audio processing callbacks.
+
+        Called when raw audio data needs to be processed or transformed.
+
+        Example:
+            >>> def process_audio(audio_data: np.ndarray, sample_rate: int) -> np.ndarray:
+            ...     # Apply noise reduction
+            ...     return filtered_audio
+        """
+
+        def __call__(self, audio_data: np.ndarray, sample_rate: int) -> np.ndarray:
+            """
+            Process audio data.
+
+            Args:
+                audio_data: Raw audio samples as numpy array
+                sample_rate: Sample rate of the audio data
+
+            Returns:
+                Processed audio data as numpy array
+            """
+            ...
+
+except ImportError:
+    # Python < 3.8 fallback - protocols not available
+    VADCallbackProtocol = VADCallback
+    SpeechStartCallbackProtocol = VADCallback
+    SpeechEndCallbackProtocol = VADCallback
+    ActivityCallbackProtocol = VADCallback
+    EventCallbackProtocol = EventCallback
+    ErrorCallbackProtocol = Callable[[Exception, Dict[str, Any]], None]
+    ThresholdChangeCallbackProtocol = Callable[[float, float, str], None]
+    AudioProcessorCallbackProtocol = Callable[[np.ndarray, int], np.ndarray]
+
+
+# Specific callback type aliases using the protocols
+SpeechStartCallback = Callable[[VADResult], None]
+SpeechEndCallback = Callable[[VADResult], None]
+ActivityCallback = Callable[[VADResult], None]
+ErrorCallback = Callable[[Exception, Dict[str, Any]], None]
+ThresholdChangeCallback = Callable[[float, float, str], None]
+AudioProcessorCallback = Callable[[np.ndarray, int], np.ndarray]
+
+# Optional callback types for common patterns
+OptionalVADCallback = Optional[VADCallback]
+OptionalSpeechStartCallback = Optional[SpeechStartCallback]
+OptionalSpeechEndCallback = Optional[SpeechEndCallback]
+OptionalActivityCallback = Optional[ActivityCallback]
+OptionalEventCallback = Optional[EventCallback]
+OptionalErrorCallback = Optional[ErrorCallback]
+
+
+@dataclass
+class VADCallbackConfig:
+    """
+    Configuration for VAD callbacks.
+
+    Groups all callback-related settings for easy management.
+    """
+
+    speech_start_callback: OptionalSpeechStartCallback = None
+    speech_end_callback: OptionalSpeechEndCallback = None
+    activity_callback: OptionalActivityCallback = None
+    event_callback: OptionalEventCallback = None
+    error_callback: OptionalErrorCallback = None
+    threshold_change_callback: Optional[ThresholdChangeCallback] = None
+
+    # Callback execution settings
+    async_execution: bool = False
+    timeout_seconds: float = 5.0
+    fail_silently: bool = True
+
+    def has_any_callback(self) -> bool:
+        """Check if any callback is configured."""
+        return any([
+            self.speech_start_callback,
+            self.speech_end_callback,
+            self.activity_callback,
+            self.event_callback,
+            self.error_callback,
+            self.threshold_change_callback,
+        ])
+
+    def get_active_callbacks(self) -> Dict[str, Callable]:
+        """Get a dictionary of all active (non-None) callbacks."""
+        callbacks = {}
+        if self.speech_start_callback:
+            callbacks["speech_start"] = self.speech_start_callback
+        if self.speech_end_callback:
+            callbacks["speech_end"] = self.speech_end_callback
+        if self.activity_callback:
+            callbacks["activity"] = self.activity_callback
+        if self.event_callback:
+            callbacks["event"] = self.event_callback
+        if self.error_callback:
+            callbacks["error"] = self.error_callback
+        if self.threshold_change_callback:
+            callbacks["threshold_change"] = self.threshold_change_callback
+        return callbacks
