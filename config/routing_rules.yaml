@@ -1,0 +1,296 @@
+# Gianna Routing Rules Configuration
+# This file defines the routing rules for the multi-agent system
+# Each rule maps keywords and patterns to specific agent types
+
+version: "1.0"
+description: "Portuguese language routing rules for Gianna multi-agent system"
+
+# Default agent when no rule matches with sufficient confidence
+default_agent: "CONVERSATION"
+default_confidence: 0.5
+
+rules:
+  # Command Agent - Handles shell commands and system operations
+  - agent_type: "COMMAND"
+    priority: 3
+    confidence_threshold: 0.15
+    description: "Handles shell commands, file operations, and system tasks"
+    keywords:
+      # Portuguese - Commands
+      - "comando"
+      - "executar"
+      - "rodar"
+      - "processar"
+      - "processo"
+      # English - Commands
+      - "run"
+      - "shell"
+      - "bash"
+      - "terminal"
+      - "console"
+      - "script"
+      # Installation
+      - "instalar"
+      - "install"
+      # System commands
+      - "sudo"
+      - "chmod"
+      - "mkdir"
+      - "ls"
+      - "cd"
+      - "cp"
+      - "mv"
+      - "rm"
+      - "cat"
+      - "grep"
+      - "find"
+      - "wget"
+      - "curl"
+      - "kill"
+      # Development tools
+      - "git"
+      - "docker"
+      - "npm"
+      - "pip"
+      - "python"
+      - "node"
+      - "java"
+      - "gcc"
+      - "make"
+      # System services
+      - "systemctl"
+      - "service"
+      # File operations (Portuguese)
+      - "arquivo"
+      - "diretório"
+      - "pasta"
+      - "criar"
+      - "deletar"
+      - "copiar"
+      - "mover"
+      - "renomear"
+      - "permissão"
+      - "configurar"
+      - "compilar"
+      - "build"
+      - "deploy"
+    patterns:
+      - "\\b(execute|run|rodar)\\s+['\"]?[\\w\\-\\.\\/]+"
+      - "\\bsudo\\s+\\w+"
+      - "\\b(cd|ls|mkdir|rm|cp|mv)\\s+[\\w\\-\\.\\/]+"
+      - "\\bgit\\s+(clone|pull|push|commit|status|add)"
+      - "\\b(npm|pip|apt|yum)\\s+(install|update|remove)"
+      - "executar\\s+o\\s+comando"
+      - "rodar\\s+(o\\s+)?(script|programa)"
+      - "abrir\\s+(o\\s+)?terminal"
+      - "no\\s+terminal"
+
+  # Audio Agent - Handles voice and audio operations
+  - agent_type: "AUDIO"
+    priority: 3
+    confidence_threshold: 0.15
+    description: "Handles audio playback, recording, TTS/STT operations"
+    keywords:
+      # Portuguese - Voice/Audio
+      - "falar"
+      - "áudio"
+      - "voz"
+      - "ouvir"
+      - "escutar"
+      - "som"
+      - "reproduzir"
+      - "tocar"
+      - "pausar"
+      - "parar"
+      - "volume"
+      - "música"
+      # English - Audio
+      - "audio"
+      - "sound"
+      - "play"
+      - "speak"
+      - "voice"
+      - "tts"
+      - "stt"
+      # Portuguese - Recording
+      - "reconhecimento"
+      - "síntese"
+      - "microfone"
+      - "alto-falante"
+      - "headphone"
+      - "fone"
+      - "gravar"
+      - "gravação"
+      # English - Recording
+      - "recording"
+      - "record"
+      # File formats
+      - "wav"
+      - "mp3"
+      - "ogg"
+      - "flac"
+      # Speech
+      - "dizer"
+      - "pronunciar"
+      - "narrar"
+      - "ler"
+      - "leitura"
+      # Audio properties
+      - "velocidade"
+      - "tom"
+      - "entonação"
+      # Language
+      - "idioma"
+      - "language"
+      - "português"
+      - "english"
+      - "español"
+      # Silence
+      - "silêncio"
+      - "mudo"
+    patterns:
+      - "\\bfalar\\s+(sobre|com|para|em)"
+      - "\\bouvir\\s+(música|áudio|som)"
+      - "\\btocar\\s+(música|áudio|arquivo)"
+      - "\\bgravar\\s+(áudio|voz|som)"
+      - "\\bvolume\\s+(alto|baixo|médio|\\d+)"
+      - "\\bvoz\\s+(masculina|feminina|robótica)"
+      - "\\bidioma\\s+(português|inglês|espanhol)"
+      - "reproduzir\\s+o\\s+áudio"
+      - "me\\s+conte\\s+sobre"
+      - "leia\\s+(para\\s+mim|em\\s+voz\\s+alta)"
+
+  # Memory Agent - Handles memory and context operations
+  - agent_type: "MEMORY"
+    priority: 2
+    confidence_threshold: 0.1
+    description: "Handles memory storage, retrieval, and user preferences"
+    keywords:
+      # Portuguese - Memory
+      - "lembrar"
+      - "memória"
+      - "histórico"
+      - "contexto"
+      - "salvar"
+      - "guardar"
+      - "armazenar"
+      - "recuperar"
+      - "buscar"
+      - "procurar"
+      # Time references
+      - "anterior"
+      - "antes"
+      - "passado"
+      - "ontem"
+      - "semana"
+      - "mês"
+      - "ano"
+      - "data"
+      - "quando"
+      - "onde"
+      - "como"
+      # Preferences
+      - "preferência"
+      - "configuração"
+      - "setting"
+      - "profile"
+      - "perfil"
+      - "usuário"
+      - "user"
+      - "personalizar"
+      - "customizar"
+      # Notes
+      - "nota"
+      - "anotação"
+      - "observação"
+      - "importante"
+      - "relevante"
+      # Data operations
+      - "esquecer"
+      - "apagar"
+      - "deletar"
+      - "limpar"
+      - "reset"
+      - "backup"
+      - "restore"
+      - "exportar"
+      - "importar"
+      - "sincronizar"
+    patterns:
+      - "\\blembrar\\s+(de|que|sobre)"
+      - "\\bmemória\\s+(de|sobre|do)"
+      - "\\bhistórico\\s+(de|da|do)"
+      - "\\bcontexto\\s+(anterior|passado|da\\s+conversa)"
+      - "\\bsalvar\\s+(nas?\\s+)?(preferência|memória|histórico)"
+      - "\\bguardar\\s+(na\\s+)?memória"
+      - "\\bbuscar\\s+(no\\s+)?(histórico|memória|contexto)"
+      - "você\\s+(lembra|sabe)\\s+(de|sobre|que)"
+      - "o\\s+que\\s+(conversamos|falamos)\\s+(sobre|antes)"
+      - "configurar\\s+(preferência|perfil|setting)"
+
+  # Conversation Agent - Default agent for general conversation
+  - agent_type: "CONVERSATION"
+    priority: 1
+    confidence_threshold: 0.05
+    description: "Handles general conversation, questions, and explanations"
+    keywords:
+      # Portuguese - Conversation
+      - "conversar"
+      - "conversa"
+      - "chat"
+      - "falar"
+      - "dizer"
+      - "pergunta"
+      - "resposta"
+      - "questão"
+      - "dúvida"
+      # Help
+      - "ajuda"
+      - "explicar"
+      - "entender"
+      - "compreender"
+      - "esclarecer"
+      - "orientar"
+      - "instruir"
+      - "ensinar"
+      - "aprender"
+      - "saber"
+      # Information
+      - "informação"
+      - "conhecimento"
+      - "curiosidade"
+      # Positive feedback
+      - "interessante"
+      - "legal"
+      - "bacana"
+      - "ótimo"
+      - "perfeito"
+      - "excelente"
+      - "obrigado"
+      - "valeu"
+      - "agradecer"
+      - "parabéns"
+      - "felicitar"
+      # Advice
+      - "opiniões"
+      - "sugestão"
+      - "conselho"
+      - "dica"
+      - "recomendação"
+      # Narrative
+      - "história"
+      - "contar"
+      - "narrar"
+      - "descrever"
+      - "relatar"
+    patterns:
+      - "\\bme\\s+(explique|conte|diga|fale)\\s+(sobre|como|porque)"
+      - "\\bo\\s+que\\s+(é|significa|representa)"
+      - "\\bcomo\\s+(funciona|fazer|usar|configurar)"
+      - "\\bpor\\s+que\\s+(isso|acontece|funciona)"
+      - "\\bqual\\s+(é|seria|foi|será)\\s+a"
+      - "\\bobrigado\\s+(pela?\\s+)?(ajuda|explicação|resposta)"
+      - "\\bme\\s+ajude\\s+(com|a|na)"
+      - "\\btenho\\s+uma\\s+(dúvida|pergunta|questão)"
+      - "\\bvocê\\s+(pode|poderia|consegue|sabe)"
+      - "\\bestou\\s+(com\\s+)?(dificuldade|problema|dúvida)"

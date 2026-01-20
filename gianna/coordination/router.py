@@ -3,16 +3,27 @@ Intelligent Agent Router for Gianna Multi-Agent System
 
 This module implements intelligent routing logic that analyzes Portuguese text
 to determine the most appropriate agent for handling specific requests.
+
+The routing rules are loaded from a YAML configuration file, making it easy
+to customize and extend without modifying code.
 """
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Set, Tuple
+from pathlib import Path
+from typing import Dict, List, Optional, Pattern, Tuple
 
 from loguru import logger
 
 from ..core.state import GiannaState
+from .router_config import (
+    AgentTypeEnum,
+    RoutingConfigLoader,
+    RoutingRuleConfig,
+    RoutingRulesConfig,
+    load_routing_config,
+)
 
 
 class AgentType(Enum):
@@ -23,16 +34,48 @@ class AgentType(Enum):
     CONVERSATION = "conversation_agent"
     MEMORY = "memory_agent"
 
+    @classmethod
+    def from_config_enum(cls, config_enum: AgentTypeEnum) -> "AgentType":
+        """Convert from configuration enum to AgentType."""
+        mapping = {
+            AgentTypeEnum.COMMAND: cls.COMMAND,
+            AgentTypeEnum.AUDIO: cls.AUDIO,
+            AgentTypeEnum.MEMORY: cls.MEMORY,
+            AgentTypeEnum.CONVERSATION: cls.CONVERSATION,
+        }
+        return mapping[config_enum]
+
 
 @dataclass
 class RoutingRule:
-    """Represents a routing rule with keywords and priority."""
+    """Represents a routing rule with keywords and compiled patterns."""
 
     agent_type: AgentType
     keywords: List[str]
-    patterns: List[str]
+    compiled_patterns: List[Pattern] = field(default_factory=list)
     priority: int = 1
     confidence_threshold: float = 0.6
+    description: Optional[str] = None
+
+    @classmethod
+    def from_config(cls, config: RoutingRuleConfig) -> "RoutingRule":
+        """Create a RoutingRule from a configuration object."""
+        # Compile regex patterns for performance
+        compiled_patterns = []
+        for pattern in config.patterns:
+            try:
+                compiled_patterns.append(re.compile(pattern, re.IGNORECASE))
+            except re.error as e:
+                logger.warning(f"Skipping invalid pattern '{pattern}': {e}")
+
+        return cls(
+            agent_type=AgentType.from_config_enum(AgentTypeEnum(config.agent_type)),
+            keywords=config.keywords,
+            compiled_patterns=compiled_patterns,
+            priority=config.priority,
+            confidence_threshold=config.confidence_threshold,
+            description=config.description,
+        )
 
 
 class AgentRouter:
@@ -41,291 +84,96 @@ class AgentRouter:
 
     Uses Portuguese keyword analysis, pattern matching, and contextual
     information to make routing decisions with confidence scoring.
+
+    Routing rules are loaded from a YAML configuration file for easy
+    customization without code changes.
     """
 
-    def __init__(self):
-        """Initialize the router with Portuguese routing rules."""
-        self.routing_rules = self._build_routing_rules()
-        self.routing_history = []
-
-    def _build_routing_rules(self) -> List[RoutingRule]:
+    def __init__(self, config_path: Optional[Path] = None):
         """
-        Build comprehensive routing rules for Portuguese language.
+        Initialize the router with routing rules from configuration.
+
+        Args:
+            config_path: Optional path to routing rules YAML file.
+                        Defaults to config/routing_rules.yaml
+        """
+        self.config_path = config_path
+        self._config: Optional[RoutingRulesConfig] = None
+        self.routing_rules = self._load_routing_rules()
+        self.routing_history: List[Dict] = []
+        self._default_agent = AgentType.CONVERSATION
+        self._default_confidence = 0.5
+
+    def _load_routing_rules(self) -> List[RoutingRule]:
+        """
+        Load routing rules from YAML configuration file.
 
         Returns:
-            List[RoutingRule]: Complete set of routing rules
+            List[RoutingRule]: List of compiled routing rules
         """
-        rules = [
-            # Command Agent Rules (High Priority)
+        try:
+            self._config = load_routing_config(
+                config_path=self.config_path, use_default_on_error=True
+            )
+
+            # Convert config rules to RoutingRule objects
+            rules = [RoutingRule.from_config(rule_config) for rule_config in self._config.rules]
+
+            # Set defaults from config
+            self._default_agent = AgentType.from_config_enum(
+                AgentTypeEnum(self._config.default_agent)
+            )
+            self._default_confidence = self._config.default_confidence
+
+            logger.info(f"Loaded {len(rules)} routing rules from configuration")
+            return rules
+
+        except Exception as e:
+            logger.error(f"Failed to load routing rules: {e}. Using hardcoded defaults.")
+            return self._get_fallback_rules()
+
+    def _get_fallback_rules(self) -> List[RoutingRule]:
+        """
+        Get minimal fallback rules when configuration loading fails.
+
+        Returns:
+            List[RoutingRule]: Minimal set of routing rules
+        """
+        return [
             RoutingRule(
                 agent_type=AgentType.COMMAND,
-                keywords=[
-                    "comando",
-                    "executar",
-                    "rodar",
-                    "run",
-                    "shell",
-                    "bash",
-                    "terminal",
-                    "console",
-                    "script",
-                    "instalar",
-                    "install",
-                    "sudo",
-                    "chmod",
-                    "mkdir",
-                    "ls",
-                    "cd",
-                    "cp",
-                    "mv",
-                    "rm",
-                    "cat",
-                    "grep",
-                    "find",
-                    "wget",
-                    "curl",
-                    "git",
-                    "docker",
-                    "npm",
-                    "pip",
-                    "python",
-                    "node",
-                    "java",
-                    "gcc",
-                    "make",
-                    "systemctl",
-                    "service",
-                    "processar",
-                    "processo",
-                    "kill",
-                    "arquivo",
-                    "diretório",
-                    "pasta",
-                    "criar",
-                    "deletar",
-                    "copiar",
-                    "mover",
-                    "renomear",
-                    "permissão",
-                    "configurar",
-                    "compilar",
-                    "build",
-                    "deploy",
-                ],
-                patterns=[
-                    r"\b(execute|run|rodar)\s+['\"]?[\w\-\.\/]+",
-                    r"\bsudo\s+\w+",
-                    r"\b(cd|ls|mkdir|rm|cp|mv)\s+[\w\-\.\/]+",
-                    r"\bgit\s+(clone|pull|push|commit|status|add)",
-                    r"\b(npm|pip|apt|yum)\s+(install|update|remove)",
-                    r"executar\s+o\s+comando",
-                    r"rodar\s+(o\s+)?(script|programa)",
-                    r"abrir\s+(o\s+)?terminal",
-                    r"no\s+terminal",
-                ],
+                keywords=["comando", "executar", "rodar", "run", "shell"],
+                compiled_patterns=[re.compile(r"\b(execute|run|rodar)\s+", re.IGNORECASE)],
                 priority=3,
                 confidence_threshold=0.15,
             ),
-            # Audio Agent Rules (High Priority)
             RoutingRule(
                 agent_type=AgentType.AUDIO,
-                keywords=[
-                    "falar",
-                    "áudio",
-                    "voz",
-                    "ouvir",
-                    "escutar",
-                    "som",
-                    "reproduzir",
-                    "tocar",
-                    "pausar",
-                    "parar",
-                    "volume",
-                    "música",
-                    "audio",
-                    "sound",
-                    "play",
-                    "speak",
-                    "voice",
-                    "tts",
-                    "stt",
-                    "reconhecimento",
-                    "síntese",
-                    "microfone",
-                    "alto-falante",
-                    "headphone",
-                    "fone",
-                    "gravar",
-                    "gravação",
-                    "recording",
-                    "record",
-                    "wav",
-                    "mp3",
-                    "ogg",
-                    "flac",
-                    "dizer",
-                    "pronunciar",
-                    "narrar",
-                    "ler",
-                    "leitura",
-                    "velocidade",
-                    "tom",
-                    "entonação",
-                    "idioma",
-                    "language",
-                    "português",
-                    "english",
-                    "español",
-                    "silêncio",
-                    "mudo",
-                ],
-                patterns=[
-                    r"\bfalar\s+(sobre|com|para|em)",
-                    r"\bouvir\s+(música|áudio|som)",
-                    r"\btocar\s+(música|áudio|arquivo)",
-                    r"\bgravar\s+(áudio|voz|som)",
-                    r"\bvolume\s+(alto|baixo|médio|\d+)",
-                    r"\bvoz\s+(masculina|feminina|robótica)",
-                    r"\bidioma\s+(português|inglês|espanhol)",
-                    r"reproduzir\s+o\s+áudio",
-                    r"me\s+conte\s+sobre",
-                    r"leia\s+(para\s+mim|em\s+voz\s+alta)",
-                ],
+                keywords=["falar", "áudio", "voz", "ouvir", "tocar"],
+                compiled_patterns=[re.compile(r"\b(falar|tocar)\s+", re.IGNORECASE)],
                 priority=3,
                 confidence_threshold=0.15,
             ),
-            # Memory Agent Rules (Medium Priority)
             RoutingRule(
                 agent_type=AgentType.MEMORY,
-                keywords=[
-                    "lembrar",
-                    "memória",
-                    "histórico",
-                    "contexto",
-                    "salvar",
-                    "guardar",
-                    "armazenar",
-                    "recuperar",
-                    "buscar",
-                    "procurar",
-                    "anterior",
-                    "antes",
-                    "passado",
-                    "ontem",
-                    "semana",
-                    "mês",
-                    "ano",
-                    "data",
-                    "quando",
-                    "onde",
-                    "como",
-                    "preferência",
-                    "configuração",
-                    "setting",
-                    "profile",
-                    "perfil",
-                    "usuário",
-                    "user",
-                    "personalizar",
-                    "customizar",
-                    "nota",
-                    "anotação",
-                    "observação",
-                    "importante",
-                    "relevante",
-                    "esquecer",
-                    "apagar",
-                    "deletar",
-                    "limpar",
-                    "reset",
-                    "backup",
-                    "restore",
-                    "exportar",
-                    "importar",
-                    "sincronizar",
-                ],
-                patterns=[
-                    r"\blembrar\s+(de|que|sobre)",
-                    r"\bmemória\s+(de|sobre|do)",
-                    r"\bhistórico\s+(de|da|do)",
-                    r"\bcontexto\s+(anterior|passado|da\s+conversa)",
-                    r"\bsalvar\s+(nas?\s+)?(preferência|memória|histórico)",
-                    r"\bguardar\s+(na\s+)?memória",
-                    r"\bbuscar\s+(no\s+)?(histórico|memória|contexto)",
-                    r"você\s+(lembra|sabe)\s+(de|sobre|que)",
-                    r"o\s+que\s+(conversamos|falamos)\s+(sobre|antes)",
-                    r"configurar\s+(preferência|perfil|setting)",
-                ],
+                keywords=["lembrar", "memória", "histórico", "salvar"],
+                compiled_patterns=[re.compile(r"\blembrar\s+", re.IGNORECASE)],
                 priority=2,
                 confidence_threshold=0.1,
             ),
-            # Conversation Agent Rules (Default/Low Priority)
             RoutingRule(
                 agent_type=AgentType.CONVERSATION,
-                keywords=[
-                    "conversar",
-                    "conversa",
-                    "chat",
-                    "falar",
-                    "dizer",
-                    "pergunta",
-                    "resposta",
-                    "questão",
-                    "dúvida",
-                    "ajuda",
-                    "explicar",
-                    "entender",
-                    "compreender",
-                    "esclarecer",
-                    "orientar",
-                    "instruir",
-                    "ensinar",
-                    "aprender",
-                    "saber",
-                    "informação",
-                    "conhecimento",
-                    "curiosidade",
-                    "interessante",
-                    "legal",
-                    "bacana",
-                    "ótimo",
-                    "perfeito",
-                    "excelente",
-                    "obrigado",
-                    "valeu",
-                    "agradecer",
-                    "parabéns",
-                    "felicitar",
-                    "opiniões",
-                    "sugestão",
-                    "conselho",
-                    "dica",
-                    "recomendação",
-                    "história",
-                    "contar",
-                    "narrar",
-                    "descrever",
-                    "relatar",
-                ],
-                patterns=[
-                    r"\bme\s+(explique|conte|diga|fale)\s+(sobre|como|porque)",
-                    r"\bo\s+que\s+(é|significa|representa)",
-                    r"\bcomo\s+(funciona|fazer|usar|configurar)",
-                    r"\bpor\s+que\s+(isso|acontece|funciona)",
-                    r"\bqual\s+(é|seria|foi|será)\s+a",
-                    r"\bobrigado\s+(pela?\s+)?(ajuda|explicação|resposta)",
-                    r"\bme\s+ajude\s+(com|a|na)",
-                    r"\btenho\s+uma\s+(dúvida|pergunta|questão)",
-                    r"\bvocê\s+(pode|poderia|consegue|sabe)",
-                    r"\bestou\s+(com\s+)?(dificuldade|problema|dúvida)",
-                ],
+                keywords=["conversar", "ajuda", "explicar", "pergunta"],
+                compiled_patterns=[re.compile(r"\bme\s+(explique|ajude)", re.IGNORECASE)],
                 priority=1,
                 confidence_threshold=0.05,
             ),
         ]
 
-        logger.info(f"Built {len(rules)} routing rules for Portuguese language")
-        return rules
+    def reload_rules(self) -> None:
+        """Reload routing rules from configuration file."""
+        self.routing_rules = self._load_routing_rules()
+        logger.info("Routing rules reloaded")
 
     def route_request(self, state: GiannaState) -> Tuple[AgentType, float]:
         """
@@ -338,15 +186,15 @@ class AgentRouter:
             Tuple[AgentType, float]: Selected agent type and confidence score
         """
         if not state["conversation"].messages:
-            return AgentType.CONVERSATION, 0.5
+            return self._default_agent, self._default_confidence
 
         last_message = state["conversation"].messages[-1]
         if last_message.get("role") != "user":
-            return AgentType.CONVERSATION, 0.5
+            return self._default_agent, self._default_confidence
 
         content = last_message.get("content", "").lower().strip()
         if not content:
-            return AgentType.CONVERSATION, 0.5
+            return self._default_agent, self._default_confidence
 
         # Calculate scores for each agent type
         agent_scores = self._calculate_routing_scores(content, state)
@@ -392,7 +240,9 @@ class AgentRouter:
         scores = self._apply_contextual_adjustments(scores, content, state)
 
         # Normalize scores
-        max_possible_score = max(rule.priority for rule in self.routing_rules) * 3
+        max_possible_score = max(
+            (rule.priority for rule in self.routing_rules), default=1
+        ) * 3
         for agent_type in scores:
             scores[agent_type] = min(1.0, scores[agent_type] / max_possible_score)
 
@@ -418,16 +268,19 @@ class AgentRouter:
         keyword_matches = sum(1 for keyword in rule.keywords if keyword in content)
         keyword_score = min(1.0, keyword_matches / max(1, len(rule.keywords) * 0.1))
 
-        # Pattern matching
-        pattern_matches = 0
-        for pattern in rule.patterns:
-            if re.search(pattern, content, re.IGNORECASE):
-                pattern_matches += 1
-
-        pattern_score = min(1.0, pattern_matches / max(1, len(rule.patterns)))
+        # Pattern matching (using pre-compiled patterns)
+        pattern_matches = sum(
+            1 for pattern in rule.compiled_patterns if pattern.search(content)
+        )
+        pattern_score = min(
+            1.0, pattern_matches / max(1, len(rule.compiled_patterns))
+        ) if rule.compiled_patterns else 0.0
 
         # Combine scores
-        score = (keyword_score * 0.6) + (pattern_score * 0.4)
+        if rule.compiled_patterns:
+            score = (keyword_score * 0.6) + (pattern_score * 0.4)
+        else:
+            score = keyword_score
 
         return score if score >= rule.confidence_threshold else 0.0
 
@@ -498,8 +351,8 @@ class AgentRouter:
 
         # Minimum confidence check
         if best_score < 0.05:
-            # Fall back to conversation agent for low confidence
-            return AgentType.CONVERSATION, 0.05
+            # Fall back to default agent for low confidence
+            return self._default_agent, self._default_confidence
 
         # If multiple agents have similar high scores, apply tie-breaking rules
         high_scores = {k: v for k, v in scores.items() if v > best_score * 0.9}
@@ -577,6 +430,23 @@ class AgentRouter:
             "avg_confidence": total_confidence / total_routes,
             "recent_routes": self.routing_history[-10:],  # Last 10 for analysis
         }
+
+    def get_config_info(self) -> Dict[str, any]:
+        """
+        Get information about the loaded configuration.
+
+        Returns:
+            Dict[str, any]: Configuration information
+        """
+        if self._config:
+            return {
+                "version": self._config.version,
+                "description": self._config.description,
+                "rules_count": len(self._config.rules),
+                "default_agent": self._default_agent.value,
+                "config_path": str(self.config_path) if self.config_path else "default",
+            }
+        return {"status": "using_fallback_rules", "rules_count": len(self.routing_rules)}
 
     def clear_routing_history(self) -> None:
         """Clear routing history (useful for testing or privacy)."""
